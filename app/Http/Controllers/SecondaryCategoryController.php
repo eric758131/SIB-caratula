@@ -3,25 +3,31 @@
 namespace App\Http\Controllers;
 
 use App\Models\PrimaryCategory;
+use App\Models\SecondaryCategory;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
-class PrimaryCategoryController extends Controller
+class SecondaryCategoryController extends Controller
 {
     public function index(Request $request)
     {
         $search = trim((string) $request->input('search', ''));
+        $primaryId = $request->input('primary_category_id', '');
         $status = $request->input('status', '');
 
-        $primaryCategories = PrimaryCategory::query()
+        $secondaryCategories = SecondaryCategory::query()
+            ->with('primaryCategory')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'ILIKE', "%{$search}%")
                       ->orWhere('description', 'ILIKE', "%{$search}%")
                       ->orWhere('id', 'ILIKE', "%{$search}%");
                 });
+            })
+            ->when($primaryId !== '' && $primaryId !== null, function ($query) use ($primaryId) {
+                $query->where('primary_category_id', $primaryId);
             })
             ->when($status !== '' && $status !== null, function ($query) use ($status) {
                 $query->where('status', filter_var($status, FILTER_VALIDATE_BOOLEAN));
@@ -30,24 +36,39 @@ class PrimaryCategoryController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('primary-categories.index', compact('primaryCategories', 'search', 'status'));
+        $primaryCategories = PrimaryCategory::orderBy('name')->get();
+
+        return view('secondary-categories.index', compact(
+            'secondaryCategories',
+            'primaryCategories',
+            'search',
+            'primaryId',
+            'status'
+        ));
     }
 
     public function create()
     {
-        return view('primary-categories.create');
+        $primaryCategories = PrimaryCategory::where('status', true)->orderBy('name')->get();
+
+        return view('secondary-categories.create', compact('primaryCategories'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'primary_category_id' => [
+                'required',
+                'integer',
+                Rule::exists('primary_categories', 'id')->where('status', true),
+            ],
             'name' => [
                 'required',
                 'string',
                 'min:3',
                 'max:200',
                 'regex:/^[\pL\pN\s\.\-\(\)\/]+$/u',
-                Rule::unique('primary_categories', 'name')->where(function ($query) use ($request) {
+                Rule::unique('secondary_categories', 'name')->where(function ($query) use ($request) {
                     $query->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($request->input('name')), 'UTF-8')]);
                 }),
             ],
@@ -57,7 +78,6 @@ class PrimaryCategoryController extends Controller
             'image_1' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'image_2' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'image_3' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
-            'logo_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'status' => ['nullable', 'boolean'],
         ], $this->validationMessages(), $this->validationAttributes());
 
@@ -67,46 +87,61 @@ class PrimaryCategoryController extends Controller
         $validated['important_notes'] = $this->normalizeText($validated['important_notes'] ?? null);
         $validated['status'] = $request->boolean('status', true);
 
-        foreach (['image_1', 'image_2', 'image_3', 'logo_image'] as $field) {
+        foreach (['image_1', 'image_2', 'image_3'] as $field) {
             if ($request->hasFile($field)) {
-                $validated[$field] = $request->file($field)->store('primary-categories', 'public');
+                $validated[$field] = $request->file($field)->store('secondary-categories', 'public');
             }
         }
 
         try {
-            PrimaryCategory::create($validated);
+            SecondaryCategory::create($validated);
         } catch (QueryException $e) {
             if ($e->getCode() === '23505') {
                 return back()->withInput()
-                    ->withErrors(['name' => 'Ya existe una categoría primaria con ese nombre.']);
+                    ->withErrors(['name' => 'Ya existe una categoría secundaria con ese nombre.']);
             }
             throw $e;
         }
 
         return redirect()
-            ->route('primary-categories.index')
-            ->with('success', 'Categoría primaria creada correctamente.');
+            ->route('secondary-categories.index')
+            ->with('success', 'Categoría secundaria creada correctamente.');
     }
 
-    public function edit(PrimaryCategory $primaryCategory)
+    public function edit(SecondaryCategory $secondaryCategory)
     {
-        return view('primary-categories.edit', compact('primaryCategory'));
+        $primaryCategories = PrimaryCategory::where(function ($q) use ($secondaryCategory) {
+                $q->where('status', true)
+                  ->orWhere('id', $secondaryCategory->primary_category_id);
+            })
+            ->orderBy('name')
+            ->get();
+
+        return view('secondary-categories.edit', compact('secondaryCategory', 'primaryCategories'));
     }
 
-    public function update(Request $request, PrimaryCategory $primaryCategory)
+    public function update(Request $request, SecondaryCategory $secondaryCategory)
     {
         $validated = $request->validate([
+            'primary_category_id' => [
+                'required',
+                'integer',
+                Rule::exists('primary_categories', 'id')->where(function ($q) use ($secondaryCategory) {
+                    $q->where('status', true)
+                    ->orWhere('id', $secondaryCategory->primary_category_id);
+                }),
+            ],
             'name' => [
                 'required',
                 'string',
                 'min:3',
                 'max:200',
                 'regex:/^[\pL\pN\s\.\-\(\)\/]+$/u',
-                Rule::unique('primary_categories', 'name')
+                Rule::unique('secondary_categories', 'name')
                     ->where(function ($query) use ($request) {
                         $query->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($request->input('name')), 'UTF-8')]);
                     })
-                    ->ignore($primaryCategory->id),
+                    ->ignore($secondaryCategory->id),
             ],
             'description' => ['nullable', 'string', 'max:2000'],
             'example' => ['nullable', 'string', 'max:2000'],
@@ -114,7 +149,6 @@ class PrimaryCategoryController extends Controller
             'image_1' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'image_2' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'image_3' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
-            'logo_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'status' => ['nullable', 'boolean'],
         ], $this->validationMessages(), $this->validationAttributes());
 
@@ -124,13 +158,13 @@ class PrimaryCategoryController extends Controller
         $validated['important_notes'] = $this->normalizeText($validated['important_notes'] ?? null);
         $validated['status'] = $request->boolean('status', true);
 
-        $imageFields = ['image_1', 'image_2', 'image_3', 'logo_image'];
+        $imageFields = ['image_1', 'image_2', 'image_3'];
 
         // Eliminar imágenes marcadas (y sin reemplazo)
         foreach ($imageFields as $field) {
             if ($request->boolean("remove_{$field}") && !$request->hasFile($field)) {
-                if ($primaryCategory->$field) {
-                    Storage::disk('public')->delete($primaryCategory->$field);
+                if ($secondaryCategory->$field) {
+                    Storage::disk('public')->delete($secondaryCategory->$field);
                 }
                 $validated[$field] = null;
             }
@@ -139,38 +173,38 @@ class PrimaryCategoryController extends Controller
         // Subir nuevas imágenes (reemplazan las anteriores)
         foreach ($imageFields as $field) {
             if ($request->hasFile($field)) {
-                if ($primaryCategory->$field) {
-                    Storage::disk('public')->delete($primaryCategory->$field);
+                if ($secondaryCategory->$field) {
+                    Storage::disk('public')->delete($secondaryCategory->$field);
                 }
-                $validated[$field] = $request->file($field)->store('primary-categories', 'public');
+                $validated[$field] = $request->file($field)->store('secondary-categories', 'public');
             }
         }
 
         try {
-            $primaryCategory->update($validated);
+            $secondaryCategory->update($validated);
         } catch (QueryException $e) {
             if ($e->getCode() === '23505') {
                 return back()->withInput()
-                    ->withErrors(['name' => 'Ya existe una categoría primaria con ese nombre.']);
+                    ->withErrors(['name' => 'Ya existe una categoría secundaria con ese nombre.']);
             }
             throw $e;
         }
 
         return redirect()
-            ->route('primary-categories.index')
-            ->with('success', 'Categoría primaria actualizada correctamente.');
+            ->route('secondary-categories.index')
+            ->with('success', 'Categoría secundaria actualizada correctamente.');
     }
 
-    public function destroy(PrimaryCategory $primaryCategory)
+    public function destroy(SecondaryCategory $secondaryCategory)
     {
-        $primaryCategory->update(['status' => ! $primaryCategory->status]);
+        $secondaryCategory->update(['status' => ! $secondaryCategory->status]);
 
-        $message = $primaryCategory->status
-            ? 'Categoría primaria reactivada correctamente.'
-            : 'Categoría primaria desactivada correctamente.';
+        $message = $secondaryCategory->status
+            ? 'Categoría secundaria reactivada correctamente.'
+            : 'Categoría secundaria desactivada correctamente.';
 
         return redirect()
-            ->route('primary-categories.index')
+            ->route('secondary-categories.index')
             ->with('success', $message);
     }
 
@@ -195,11 +229,13 @@ class PrimaryCategoryController extends Controller
     private function validationMessages(): array
     {
         return [
+            'primary_category_id.required' => 'Debes seleccionar una categoría primaria.',
+            'primary_category_id.exists' => 'La categoría primaria seleccionada no es válida o está inactiva.',
             'name.required' => 'El nombre es obligatorio.',
             'name.min' => 'El nombre debe tener al menos :min caracteres.',
             'name.max' => 'El nombre no puede superar los :max caracteres.',
             'name.regex' => 'El nombre solo puede contener letras, números, espacios, puntos, guiones, paréntesis y barras.',
-            'name.unique' => 'Ya existe una categoría primaria con ese nombre.',
+            'name.unique' => 'Ya existe una categoría secundaria con ese nombre.',
             'description.max' => 'La descripción no puede superar los :max caracteres.',
             'example.max' => 'El ejemplo no puede superar los :max caracteres.',
             'important_notes.max' => 'Las notas importantes no pueden superar los :max caracteres.',
@@ -212,15 +248,13 @@ class PrimaryCategoryController extends Controller
             'image_3.image' => 'La imagen 3 debe ser un archivo de imagen.',
             'image_3.mimes' => 'La imagen 3 debe ser jpg, jpeg, png o webp.',
             'image_3.max' => 'La imagen 3 no puede superar los 4 MB.',
-            'logo_image.image' => 'El logo debe ser un archivo de imagen.',
-            'logo_image.mimes' => 'El logo debe ser jpg, jpeg, png o webp.',
-            'logo_image.max' => 'El logo no puede superar los 4 MB.',
         ];
     }
 
     private function validationAttributes(): array
     {
         return [
+            'primary_category_id' => 'categoría primaria',
             'name' => 'nombre',
             'description' => 'descripción',
             'example' => 'ejemplo',
@@ -228,7 +262,6 @@ class PrimaryCategoryController extends Controller
             'image_1' => 'imagen 1',
             'image_2' => 'imagen 2',
             'image_3' => 'imagen 3',
-            'logo_image' => 'logo',
         ];
     }
 }

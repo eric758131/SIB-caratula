@@ -15,6 +15,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        database_path('seeders/AdminUserSeeder.php');
+        $this->call([
+            AdminUserSeeder::class,
+            CategorySeeder::class,
+            BranchSeeder::class,
+            SpecialtySeeder::class,
+            UniversitySeeder::class,
+            EngineerSeeder::class,
+        ]);
     }
 }

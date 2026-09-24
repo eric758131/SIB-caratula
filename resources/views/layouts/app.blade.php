@@ -66,12 +66,48 @@
                 <span>Normas</span>
             </a>
 
+            <a href="{{ route('universities.index') }}"
+            class="flex items-center gap-3 px-5 py-3 hover:bg-gray-800 {{ request()->routeIs('universities.*') ? 'bg-gray-800 border-l-4 border-blue-500' : '' }}">
+                <span>🎓</span>
+                <span>Universidades</span>
+            </a>
+
+            <a href="{{ route('branches.index') }}"
+            class="flex items-center gap-3 px-5 py-3 hover:bg-gray-800 {{ request()->routeIs('branches.*') ? 'bg-gray-800 border-l-4 border-blue-500' : '' }}">
+                <span>🏗️</span>
+                <span>Ramas de ingeniería</span>
+            </a>
+
+            <a href="{{ route('specialties.index') }}"
+            class="flex items-center gap-3 px-5 py-3 hover:bg-gray-800 {{ request()->routeIs('specialties.*') ? 'bg-gray-800 border-l-4 border-blue-500' : '' }}">
+                <span>🔧</span>
+                <span>Especialidades</span>
+            </a>
+
+            <a href="{{ route('engineers.index') }}"
+            class="flex items-center gap-3 px-5 py-3 hover:bg-gray-800 {{ request()->routeIs('engineers.*') ? 'bg-gray-800 border-l-4 border-blue-500' : '' }}">
+                <span>👷</span>
+                <span>Ingenieros</span>
+            </a>
+
             <div class="mt-4 px-5 text-xs uppercase text-gray-500 font-semibold">Categorías</div>
 
             <a href="{{ route('primary-categories.index') }}"
             class="flex items-center gap-3 px-5 py-3 hover:bg-gray-800 {{ request()->routeIs('primary-categories.*') ? 'bg-gray-800 border-l-4 border-blue-500' : '' }}">
                 <span>📁</span>
                 <span>Categorías primarias</span>
+            </a>
+
+            <a href="{{ route('secondary-categories.index') }}"
+            class="flex items-center gap-3 px-5 py-3 hover:bg-gray-800 {{ request()->routeIs('secondary-categories.*') ? 'bg-gray-800 border-l-4 border-blue-500' : '' }}">
+                <span>📂</span>
+                <span>Categorías secundarias</span>
+            </a>
+
+            <a href="{{ route('tertiary-categories.index') }}"
+            class="flex items-center gap-3 px-5 py-3 hover:bg-gray-800 {{ request()->routeIs('tertiary-categories.*') ? 'bg-gray-800 border-l-4 border-blue-500' : '' }}">
+                <span>🗂️</span>
+                <span>Categorías terciarias</span>
             </a>
 
             

@@ -6,6 +6,12 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\StandardController;
 use App\Http\Controllers\PrimaryCategoryController;
+use App\Http\Controllers\SecondaryCategoryController;
+use App\Http\Controllers\TertiaryCategoryController;
+use App\Http\Controllers\UniversityController;
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\SpecialtyController;
+use App\Http\Controllers\EngineerController;
 use Illuminate\Support\Facades\Route;
 
 // Pública
@@ -24,4 +30,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('countries', CountryController::class)->except(['show']);
     Route::resource('standards', StandardController::class)->except(['show']);
     Route::resource('primary-categories', PrimaryCategoryController::class)->except(['show']);
+    Route::resource('secondary-categories', SecondaryCategoryController::class)->except(['show']);
+    Route::resource('tertiary-categories', TertiaryCategoryController::class)->except(['show']);
+    Route::resource('universities', UniversityController::class)->except(['show']);
+    Route::resource('branches', BranchController::class)->except(['show']);
+    Route::resource('specialties', SpecialtyController::class)->except(['show']);
+    Route::resource('engineers', EngineerController::class)->except(['show']);
 });
