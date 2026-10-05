@@ -1,0 +1,114 @@
+@let p = param();
+<div
+  class="param-row"
+  [class.param-row--wide]="p.data_type === 'texto' || p.data_type === 'fecha'"
+  [class.is-focused]="focused()"
+  [class.is-empty]="isEmpty()"
+>
+  <div>
+    <label class="param-row__name" [for]="'param-' + p.id">
+      {{ p.name }}
+      @if (p.is_required) {
+        <span class="req" aria-hidden="true">*</span>
+      } @else {
+        <span class="param-row__optional">(opcional)</span>
+      }
+      <button type="button" class="btn btn--link btn--sm" (click)="showHelp()" [attr.aria-label]="'Ayuda sobre ' + p.name">
+        ⓘ ¿Qué es?
+      </button>
+    </label>
+    @if (p.description) {
+      <div class="param-row__desc">{{ p.description }}</div>
+    }
+  </div>
+
+  <div>
+    @switch (p.data_type) {
+      @case ('numero') {
+        <div class="input-unit">
+          <input
+            class="input"
+            type="text"
+            autocomplete="off"
+            [attr.inputmode]="p.max_decimals === 0 ? 'numeric' : 'decimal'"
+            [placeholder]="p.max_decimals === 0 ? 'Ej.: 120' : 'Ej.: 120,5'"
+            [id]="'param-' + p.id"
+            [class.is-invalid]="isInvalid() || tooManyDecimals()"
+            [attr.aria-invalid]="isInvalid() || tooManyDecimals()"
+            [attr.aria-describedby]="'param-hint-' + p.id"
+            [value]="numberText()"
+            (input)="onNumber($event)"
+            (focus)="onFocus()"
+            (blur)="focused.set(false)"
+          />
+          @if (p.unit_of_measure) {
+            <span>{{ p.unit_of_measure }}</span>
+          }
+        </div>
+        <span class="field__hint" style="display: block; margin-top: 4px" [id]="'param-hint-' + p.id">
+          @if (isInvalid()) {
+            <span class="field__error">Solo números. Ej.: 120,5</span>
+          } @else if (tooManyDecimals()) {
+            <span class="field__error">
+              {{ p.max_decimals === 0 ? 'Solo números enteros, sin decimales.' : 'Máximo ' + decimalsText() + '.' }}
+            </span>
+          } @else if (showsReading()) {
+            Se registrará: <strong>{{ formatNumber($any(value())) }}</strong> {{ p.unit_of_measure }}
+          }
+        </span>
+      }
+
+      @case ('fecha') {
+        <input
+          class="input"
+          type="date"
+          [id]="'param-' + p.id"
+          [value]="value() ?? ''"
+          (change)="onDate($event)"
+          (focus)="onFocus()"
+          (blur)="focused.set(false)"
+        />
+      }
+
+      @case ('booleano') {
+        <div class="yes-no" role="radiogroup" [attr.aria-label]="p.name" [id]="'param-' + p.id">
+          <button
+            type="button"
+            role="radio"
+            [class.is-active]="value() === true"
+            [attr.aria-checked]="value() === true"
+            (click)="setBoolean(true)"
+          >
+            Sí
+          </button>
+          <button
+            type="button"
+            role="radio"
+            [class.is-active]="value() === false"
+            [attr.aria-checked]="value() === false"
+            (click)="setBoolean(false)"
+          >
+            No
+          </button>
+        </div>
+      }
+
+      @default {
+        <input
+          class="input"
+          type="text"
+          maxlength="1000"
+          autocomplete="off"
+          [id]="'param-' + p.id"
+          [value]="value() ?? ''"
+          (input)="onText($event)"
+          (focus)="onFocus()"
+          (blur)="focused.set(false)"
+        />
+        @if (p.unit_of_measure) {
+          <span class="field__hint">En {{ p.unit_of_measure }}</span>
+        }
+      }
+    }
+  </div>
+</div>

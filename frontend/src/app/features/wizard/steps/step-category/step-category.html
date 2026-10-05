@@ -1,0 +1,179 @@
+<section class="card fade-in">
+  <h2 class="step-title">Define tu <span>Proyecto</span></h2>
+  <p class="step-lead">
+    Haz clic sobre las opciones para ver su definición, ejemplos e imágenes en el Asistente S.I.B. de la derecha.
+  </p>
+
+  @if (store.draftRef(); as draft) {
+    @if (!store.procedure()) {
+      <div class="alert alert--info draft-banner" role="status">
+        <span class="alert__icon" aria-hidden="true">📝</span>
+        <div class="alert__body">
+          <strong>Tienes un trámite sin enviar</strong><br />
+          N° {{ draft.number }} — {{ draft.title }}
+        </div>
+        <button type="button" class="btn btn--primary btn--sm" [disabled]="store.resuming()" (click)="store.resume(draft.hash)">
+          @if (store.resuming()) {
+            <span class="spinner"></span>
+          }
+          Continuar ese trámite
+        </button>
+        <button type="button" class="btn btn--ghost btn--sm" (click)="store.forgetDraft()">Empezar uno nuevo</button>
+      </div>
+    }
+  }
+
+  <!-- 1-3. Categorías -->
+  <div class="grid-auto">
+    <div>
+      <div class="section-label"><span class="num">1</span> Categoría principal</div>
+      <app-option-list
+        label="Categorías principales"
+        [items]="store.primaries()"
+        [selectedId]="store.primary()?.id ?? null"
+        [loading]="store.loadingBase()"
+        emptyText="No hay categorías registradas."
+        (picked)="store.selectPrimary($event)"
+        (hovered)="store.previewHelp($event, 'Categoría principal', '🏛️')"
+      />
+    </div>
+
+    <div>
+      <div class="section-label"><span class="num">2</span> Categoría secundaria</div>
+      <app-option-list
+        label="Categorías secundarias"
+        [items]="store.secondaries()"
+        [selectedId]="store.secondary()?.id ?? null"
+        [loading]="store.loadingSecondaries()"
+        [disabled]="!store.primary()"
+        disabledText="Selecciona una categoría principal primero"
+        emptyText="Esta categoría principal aún no tiene categorías secundarias."
+        (picked)="store.selectSecondary($event)"
+        (hovered)="store.previewHelp($event, 'Categoría secundaria', '📂')"
+      />
+      @if (store.secondary()?.definition; as definition) {
+        <a class="btn btn--ghost btn--sm definition-link" [href]="definition" target="_blank" rel="noopener">
+          📄 Ver definición de {{ store.secondary()!.name }}
+        </a>
+      }
+    </div>
+
+    <div>
+      @if (store.isInformes()) {
+        <div class="section-label"><span class="num">3</span> Tema del informe</div>
+        <div class="option-list" [class.is-disabled]="!store.secondary()">
+          @if (!store.secondary()) {
+            <div class="empty">Selecciona una categoría secundaria primero</div>
+          } @else {
+            <div class="field" style="padding: 8px">
+              <label class="field__label" for="topic">¿De qué trata el informe? <span class="req">*</span></label>
+              <input
+                id="topic"
+                class="input"
+                list="topic-suggestions"
+                maxlength="200"
+                autocomplete="off"
+                placeholder="Ej.: ESTUDIO DE SUELOS"
+                [value]="store.topicName()"
+                (input)="store.setTopicName(value($event))"
+                (focus)="topicHelp()"
+              />
+              <datalist id="topic-suggestions">
+                @for (t of topics(); track t.id) {
+                  <option [value]="t.name"></option>
+                }
+              </datalist>
+              <span class="field__hint">Escríbelo con tus palabras o elige uno sugerido.</span>
+              <div class="alert alert--info" style="margin-top: 12px">
+                <span class="alert__icon" aria-hidden="true">ℹ️</span>
+                <span class="alert__body">Los informes no tienen tipos de proyecto ni parámetros: solo escribe el tema.</span>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="section-label"><span class="num">3</span> Tipo de proyecto</div>
+        <app-option-list
+          label="Tipos de proyecto"
+          [items]="store.tertiaries()"
+          [selectedId]="store.tertiary()?.id ?? null"
+          [loading]="store.loadingTertiaries()"
+          [disabled]="!store.secondary()"
+          disabledText="Selecciona una categoría secundaria primero"
+          emptyText="Esta categoría secundaria aún no tiene tipos de proyecto."
+          (picked)="store.selectTertiary($event)"
+          (hovered)="store.previewHelp($event, 'Tipo de proyecto', '🏗️')"
+        />
+      }
+    </div>
+  </div>
+
+  <!-- Documentos requeridos: se descargan aquí y se suben llenos en el paso 3 -->
+  @if (!store.isInformes() && store.tertiary()) {
+    <div class="block" style="margin-top: 24px">
+      <div class="section-label"><span class="num">4</span> Documentos que debes entregar</div>
+      @if (store.loadingDetail()) {
+        <div class="skeleton"></div>
+      } @else if (store.downloads().length) {
+        <p class="section-help">
+          Descarga los formatos, llénalos y tenlos listos: en el paso 3 los subirás. También podrás enviar otros
+          documentos que quieras agregar.
+        </p>
+        @if (store.tertiaryDetail()?.required_documents_zip_url; as zipUrl) {
+          <div class="download-all">
+            <a class="btn btn--primary" [href]="zipUrl" title="Descarga todos los formatos juntos en un archivo .zip">
+              📦 Descargar todo (.zip)
+            </a>
+          </div>
+        }
+        <div class="download-list">
+          @for (d of store.downloads(); track d.id) {
+            <div class="download-item">
+              <span style="font-size: 1.6em" aria-hidden="true">📄</span>
+              <div>
+                <strong>{{ d.name }}</strong>
+              </div>
+              @if (d.download_url) {
+                <a class="btn btn--primary btn--sm" [href]="d.download_url" target="_blank" rel="noopener">⬇ Descargar</a>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="alert alert--info">
+          <span class="alert__icon" aria-hidden="true">ℹ️</span>
+          <span class="alert__body">Este tipo de proyecto no pide documentos. Si quieres, podrás enviar los tuyos en el paso 3.</span>
+        </div>
+      }
+    </div>
+  }
+
+  <div class="step-nav">
+    <span class="step-nav__spacer"></span>
+    <button
+      type="button"
+      class="btn btn--primary btn--lg"
+      [disabled]="store.step1Missing().length > 0 || store.loadingDetail()"
+      (click)="store.goTo(2)"
+    >
+      @if (store.loadingDetail()) {
+        <span class="spinner"></span>
+      }
+      Continuar al Formulario →
+    </button>
+  </div>
+
+  @if (store.step1Missing().length) {
+    <div class="alert alert--warn missing" role="status">
+      <span class="alert__icon" aria-hidden="true">⚠️</span>
+      <div class="alert__body">
+        Para continuar te falta:
+        <ul>
+          @for (m of store.step1Missing(); track m) {
+            <li>{{ m }}</li>
+          }
+        </ul>
+      </div>
+    </div>
+  }
+</section>

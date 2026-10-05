@@ -1,0 +1,92 @@
+<header class="cabecera">
+  <div class="cabecera__container">
+    <div class="cabecera__logo-wrapper">
+      @if (!logoFailed()) {
+        <img
+          class="cabecera__logo"
+          [src]="logo"
+          alt="Sociedad de Ingenieros de Bolivia - Logo oficial"
+          (error)="logoFailed.set(true)"
+        />
+      } @else {
+        <span class="cabecera__logo-fallback" title="Coloca el logo en public/images/logo-empresa.png">SIB</span>
+      }
+    </div>
+
+    <span class="cabecera__divider" aria-hidden="true"></span>
+
+    <div class="cabecera__titles">
+      <h1 class="cabecera__main-title">
+        Sociedad de Ingenieros de Bolivia
+        <span class="cabecera__accent">Departamental La Paz</span>
+      </h1>
+      <p class="cabecera__subtitle">Asistente de Generador de Carátulas</p>
+    </div>
+
+    <div class="cabecera__actions">
+      <button
+        type="button"
+        class="cabecera__settings-btn"
+        aria-haspopup="dialog"
+        [attr.aria-expanded]="open()"
+        aria-label="Abrir panel de personalización de tema y tamaño de letra"
+        (click)="open.set(!open())"
+      >
+        <span aria-hidden="true">⚙️</span>
+        <span class="cabecera__btn-text">Personalizar</span>
+      </button>
+
+      @if (open()) {
+        <div class="theme-panel" role="dialog" aria-label="Personalizar apariencia">
+          <div class="theme-panel__title">Personaliza tu experiencia</div>
+          <p class="field__hint">Tus preferencias se guardan en este navegador.</p>
+
+          <div class="theme-panel__group">
+            <div class="section-label">🎨 Tema</div>
+            <div class="theme-panel__options">
+              @for (t of themes; track t.id) {
+                <button
+                  type="button"
+                  class="theme-option"
+                  [class.is-active]="themeService.theme() === t.id"
+                  [attr.aria-pressed]="themeService.theme() === t.id"
+                  (click)="themeService.theme.set(t.id)"
+                >
+                  <span class="theme-option__swatch" aria-hidden="true">
+                    @for (c of t.swatch; track c) {
+                      <i [style.background]="c"></i>
+                    }
+                  </span>
+                  <span>
+                    <strong>{{ t.name }}</strong>
+                    <small>{{ t.description }}</small>
+                  </span>
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="theme-panel__group">
+            <div class="section-label">🔠 Tamaño de letra</div>
+            <div class="segmented" role="group" aria-label="Tamaño de letra">
+              <button
+                type="button"
+                [class.is-active]="themeService.fontSize() === 'normal'"
+                (click)="themeService.fontSize.set('normal')"
+              >
+                Normal
+              </button>
+              <button
+                type="button"
+                [class.is-active]="themeService.fontSize() === 'grande'"
+                (click)="themeService.fontSize.set('grande')"
+              >
+                Grande
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</header>

@@ -1,0 +1,105 @@
+@let d = data();
+@let e = engineer();
+
+<article class="caratula" aria-label="Carátula del proyecto">
+  <!-- Encabezado: logo cat. 1 · logo S.I.B. · código de la terciaria -->
+  <header class="caratula__head">
+    <div class="caratula__cat1">
+      @if (d.primaryLogo && primaryLogoFailed() !== d.primaryLogo) {
+        <img
+          class="caratula__logo caratula__logo--cat"
+          [src]="d.primaryLogo"
+          alt="Logo de la categoría"
+          (error)="primaryLogoFailed.set(d.primaryLogo)"
+        />
+      } @else {
+        <div class="caratula__logo-placeholder caratula__logo--cat">LOGO CATEGORÍA</div>
+      }
+      <div class="caratula__visado">VISADO</div>
+      <div class="caratula__cat1-name" [class.is-placeholder]="!d.primaryName">
+        {{ d.primaryName || 'Categoría principal' }}
+      </div>
+    </div>
+
+    <div class="caratula__company">
+      @if (!companyLogoFailed()) {
+        <img class="caratula__logo caratula__logo--company" [src]="companyLogo" alt="S.I.B. Departamental La Paz" (error)="companyLogoFailed.set(true)" />
+      } @else {
+        <div class="caratula__logo-placeholder caratula__logo--company">LOGO S.I.B.</div>
+      }
+    </div>
+
+    <div class="caratula__code" [class.is-placeholder]="!d.tertiaryCode">{{ d.tertiaryCode || 'COD.' }}</div>
+  </header>
+
+  <!-- Categoría secundaria y tipo de proyecto -->
+  <h1 class="caratula__cat2" [class.is-placeholder]="!d.secondaryName">
+    {{ d.secondaryName || 'Categoría secundaria' }}
+  </h1>
+  <p class="caratula__cat3" [class.is-placeholder]="!d.typeName">– {{ d.typeName || 'Tipo de proyecto' }}</p>
+
+  <!--
+    Un solo marco con líneas compartidas:
+      [ vacío ] [ título y parámetros ]
+      [ interesados / firma / RNI ] [ sello de conformidad ]
+  -->
+  <section class="caratula__frame">
+    <div class="caratula__cell caratula__data">
+      <div class="caratula__line">
+        <span class="caratula__label">Título del proyecto:</span>
+        <span class="caratula__value" [class.is-placeholder]="!d.title">{{ d.title || 'Título del proyecto' }}</span>
+      </div>
+
+      <div class="caratula__params" [class.is-compact]="d.parameters.length > 10">
+        @for (p of d.parameters; track p.name) {
+          <div class="caratula__line">
+            <span class="caratula__label">{{ p.name }}@if (p.unit) { <span class="caratula__unit">({{ p.unit }})</span>}:</span>
+            <span class="caratula__value" [class.is-placeholder]="p.value === null">{{ p.value ?? '' }}</span>
+          </div>
+        }
+      </div>
+
+      @if (d.standards.length) {
+        <div class="caratula__line">
+          <span class="caratula__label">Norma de diseño:</span>
+          <span class="caratula__value">{{ d.standards.join(' · ') }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="caratula__cell caratula__left">
+      <div class="caratula__owners">
+        <!-- Nombres pegados al borde de arriba de la casilla -->
+        <div class="caratula__owners-names">
+          <div class="caratula__label">{{ d.owners.length > 1 ? 'Nombre de los interesados:' : 'Nombre del interesado (s):' }}</div>
+          @for (o of d.owners; track $index) {
+            <div class="caratula__value">{{ o }}</div>
+          }
+        </div>
+        <!-- Resto de la casilla en blanco: espacio para sellos -->
+        <div class="caratula__stamps" aria-hidden="true"></div>
+      </div>
+
+      <div class="caratula__sign">
+        <div class="caratula__label">Sello y firma Ing. proyectista:</div>
+        <!-- Espacio en blanco: aquí sella y firma el ingeniero -->
+      </div>
+
+      <div class="caratula__engineer">
+        <div class="caratula__line">
+          <span class="caratula__label">R.N.I.:</span>
+          <span class="caratula__value">{{ e?.rni ?? '' }}</span>
+        </div>
+        <div class="caratula__line">
+          <span class="caratula__label">Nombre:</span>
+          <span class="caratula__value">{{ e ? 'Ing. ' + e.name : 'Ing.' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Se llena a mano: el sello de conformidad es físico -->
+    <div class="caratula__cell caratula__conformity">
+      <div class="caratula__label">Sello de conformidad:</div>
+    </div>
+  </section>
+</article>

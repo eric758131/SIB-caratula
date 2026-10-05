@@ -4,7 +4,7 @@
         País <span class="text-red-500">*</span>
     </label>
     <select name="country_id" id="country_id" required
-            class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500
+            class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500
                    @error('country_id') border-red-400 @else border-gray-300 @enderror">
         <option value="">— Selecciona un país —</option>
         @foreach ($countries as $country)
@@ -31,7 +31,7 @@
            maxlength="100"
            required
            placeholder="Ej: NB 777 - Instalaciones eléctricas"
-           class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500
+           class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500
                   @error('name') border-red-400 @else border-gray-300 @enderror">
     @error('name')
         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -51,7 +51,7 @@
               rows="4"
               maxlength="2000"
               placeholder="Descripción opcional de la norma..."
-              class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500
+              class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500
                      @error('description') border-red-400 @else border-gray-300 @enderror">{{ old('description', $standard->description ?? '') }}</textarea>
     @error('description')
         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -68,7 +68,7 @@
            name="effective_date"
            id="effective_date"
            value="{{ old('effective_date', isset($standard) && $standard->effective_date ? $standard->effective_date->format('Y-m-d') : '') }}"
-           class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500
+           class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500
                   @error('effective_date') border-red-400 @else border-gray-300 @enderror">
     @error('effective_date')
         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -85,7 +85,7 @@
                name="status"
                value="1"
                {{ old('status', $standard->status ?? true) ? 'checked' : '' }}
-               class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+               class="rounded border-gray-300 text-brand-600 shadow-sm focus:ring-brand-500">
         <span class="text-sm text-gray-700">Activo</span>
     </label>
     @error('status')

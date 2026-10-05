@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "C:\\Users\\COMPU\\Desktop\\Pasantia\\Sib-caratulas\\resources\\views\\secondary-categories"
+    ],
+    "allow": [
+      "PowerShell(robocopy \"C:\\\\Users\\\\COMPU\\\\Desktop\\\\Pasantia\\\\Sib-caratulas-Angular\" \"C:\\\\Users\\\\COMPU\\\\Desktop\\\\Pasantia\\\\Sib-caratulas\\\\frontend\" /E /XD node_modules dist .angular /NFL /NDL /NJH /NP; \"exit: $LASTEXITCODE\")"
+    ]
+  }
+}

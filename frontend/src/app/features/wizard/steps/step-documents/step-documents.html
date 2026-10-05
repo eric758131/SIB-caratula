@@ -1,0 +1,226 @@
+<section class="card fade-in">
+  <h2 class="step-title">Sube tus <span>Documentos</span></h2>
+  <p class="step-lead">
+    Sube cada documento requerido para tu trámite
+    @if (store.procedure(); as p) {
+      <strong>N° {{ p.number }}</strong>
+    }. Cuando todo esté completo, revisa la vista previa y envíalo.
+  </p>
+
+  @if (!docs().length) {
+    <div class="alert alert--info block">
+      <span class="alert__icon" aria-hidden="true">ℹ️</span>
+      <span class="alert__body">
+        Tu categoría no pide documentos. Puedes continuar a la vista previa o agregar tus memorias y hojas de cálculo abajo.
+      </span>
+    </div>
+  } @else {
+    <div class="docs-progress">
+      <div class="progress" role="progressbar" [attr.aria-valuenow]="percent()" aria-valuemin="0" aria-valuemax="100">
+        <span [style.width.%]="percent()"></span>
+      </div>
+      <strong>{{ completeCount() }} de {{ docs().length }} documentos</strong>
+    </div>
+  }
+
+  <div class="alert alert--info block" style="margin-bottom: 20px">
+    <span class="alert__icon" aria-hidden="true">📌</span>
+    <span class="alert__body">
+      Formatos: {{ extensions.join(', ').toUpperCase() }} · Máximo {{ maxMb }} MB por archivo · Puedes subir varios
+      archivos en cada documento.
+    </span>
+  </div>
+
+  @if (docs().length) {
+    @for (doc of docs(); track doc.id) {
+      <article class="doc-card" [class.is-complete]="doc.files.length > 0">
+        <div class="doc-card__head">
+          <h3>{{ doc.files.length ? '✅' : '📄' }} {{ doc.name }}</h3>
+          <span style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+            @if (doc.download_url) {
+              <a class="btn btn--ghost btn--sm" [href]="doc.download_url" target="_blank" rel="noopener" title="Descarga el formato oficial, complétalo y súbelo">
+                ⬇ Descargar formato
+              </a>
+            }
+            <span class="badge" [class.badge--ok]="doc.files.length > 0" [class.badge--pending]="!doc.files.length">
+              {{ doc.files.length ? 'Completo' : 'Pendiente' }}
+            </span>
+          </span>
+        </div>
+
+        <label
+          class="dropzone"
+          [class.is-over]="overDoc() === doc.id"
+          (dragover)="onDragOver(doc.id, $event)"
+          (dragleave)="overDoc.set(null)"
+          (drop)="onDrop(doc.id, $event)"
+        >
+          <input type="file" class="sr-only" multiple [accept]="accept" (change)="onPick(doc.id, $event)" />
+          <span class="dropzone__icon" aria-hidden="true">📤</span>
+          <strong>Arrastra archivos aquí</strong>
+          <span>o haz clic para elegirlos desde tu computadora</span>
+        </label>
+
+        @if (uploadsFor(doc.id).length || doc.files.length) {
+          <div class="file-list">
+            @for (u of uploadsFor(doc.id); track u.key) {
+              <div class="file-row" [class.is-error]="u.status === 'error'">
+                <span class="file-row__icon" aria-hidden="true">{{ u.status === 'error' ? '⚠️' : icon(u.name) }}</span>
+                <div class="file-row__info">
+                  <strong>{{ u.name }}</strong>
+                  @if (u.status === 'error') {
+                    <small style="color: inherit">{{ u.error }}</small>
+                  } @else {
+                    <small>{{ u.status === 'queued' ? 'En cola…' : 'Subiendo ' + u.percent + '%' }} · {{ size(u.size) }}</small>
+                    <div class="progress"><span [style.width.%]="u.percent"></span></div>
+                  }
+                </div>
+                @if (u.status === 'error') {
+                  <button type="button" class="icon-btn" aria-label="Descartar aviso" (click)="dismiss(u.key)">✕</button>
+                }
+              </div>
+            }
+
+            @for (f of doc.files; track f.id) {
+              <div class="file-row">
+                <span class="file-row__icon" aria-hidden="true">{{ icon(f.file_name) }}</span>
+                <div class="file-row__info">
+                  <strong>{{ f.file_name }}</strong>
+                  <small>{{ f.human_size }} · subido ✔</small>
+                </div>
+                <a class="icon-btn" [href]="f.download_url" target="_blank" rel="noopener" [attr.aria-label]="'Descargar ' + f.file_name" title="Descargar">⬇</a>
+                <button
+                  type="button"
+                  class="icon-btn"
+                  [disabled]="deleting() === f.id"
+                  [attr.aria-label]="'Eliminar ' + f.file_name"
+                  title="Eliminar"
+                  (click)="remove(f)"
+                >
+                  @if (deleting() === f.id) {
+                    <span class="spinner"></span>
+                  } @else {
+                    🗑
+                  }
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </article>
+    }
+  }
+
+  <!-- Otros documentos que el usuario quiera enviar: memorias y hojas de cálculo -->
+  <article class="doc-card" [class.is-complete]="extras().length > 0">
+    <div class="doc-card__head">
+      <h3>➕ Otros documentos <span class="field__hint">(memorias y hojas de cálculo)</span></h3>
+      @if (extras().length) {
+        <span class="badge badge--ok">{{ extras().length }} archivo(s)</span>
+      }
+    </div>
+    <p class="field__hint" style="margin: 0 0 10px">
+      Sube aquí tus memorias y hojas de cálculo, o cualquier otro documento que quieras entregar.
+    </p>
+
+    <label
+      class="dropzone"
+      [class.is-over]="overDoc() === 'extra'"
+      (dragover)="onDragOver('extra', $event)"
+      (dragleave)="overDoc.set(null)"
+      (drop)="onDrop('extra', $event)"
+    >
+      <input type="file" class="sr-only" multiple [accept]="accept" (change)="onPick('extra', $event)" />
+      <span class="dropzone__icon" aria-hidden="true">📤</span>
+      <strong>Arrastra archivos aquí</strong>
+      <span>o haz clic para elegirlos desde tu computadora</span>
+    </label>
+
+    @if (uploadsFor('extra').length || extras().length) {
+      <div class="file-list">
+        @for (u of uploadsFor('extra'); track u.key) {
+          <div class="file-row" [class.is-error]="u.status === 'error'">
+            <span class="file-row__icon" aria-hidden="true">{{ u.status === 'error' ? '⚠️' : icon(u.name) }}</span>
+            <div class="file-row__info">
+              <strong>{{ u.name }}</strong>
+              @if (u.status === 'error') {
+                <small style="color: inherit">{{ u.error }}</small>
+              } @else {
+                <small>{{ u.status === 'queued' ? 'En cola…' : 'Subiendo ' + u.percent + '%' }} · {{ size(u.size) }}</small>
+                <div class="progress"><span [style.width.%]="u.percent"></span></div>
+              }
+            </div>
+            @if (u.status === 'error') {
+              <button type="button" class="icon-btn" aria-label="Descartar aviso" (click)="dismiss(u.key)">✕</button>
+            }
+          </div>
+        }
+
+        @for (f of extras(); track f.id) {
+          <div class="file-row">
+            <span class="file-row__icon" aria-hidden="true">{{ icon(f.file_name) }}</span>
+            <div class="file-row__info">
+              <strong>{{ f.file_name }}</strong>
+              <small>{{ f.human_size }} · subido ✔</small>
+            </div>
+            <a class="icon-btn" [href]="f.download_url" target="_blank" rel="noopener" [attr.aria-label]="'Descargar ' + f.file_name" title="Descargar">⬇</a>
+            <button
+              type="button"
+              class="icon-btn"
+              [disabled]="deleting() === f.id"
+              [attr.aria-label]="'Eliminar ' + f.file_name"
+              title="Eliminar"
+              (click)="remove(f)"
+            >
+              @if (deleting() === f.id) {
+                <span class="spinner"></span>
+              } @else {
+                🗑
+              }
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </article>
+
+  @if (deleteError()) {
+    <div class="alert alert--error">
+      <span class="alert__icon" aria-hidden="true">❌</span><span class="alert__body">{{ deleteError() }}</span>
+    </div>
+  }
+
+  @if (busy()) {
+    <div class="alert alert--warn" style="margin-top: 16px">
+      <span class="alert__icon" aria-hidden="true">⏳</span>
+      <span class="alert__body">Se están subiendo archivos. No cierres ni cambies de paso hasta que terminen.</span>
+    </div>
+  }
+
+  <div class="step-nav">
+    <button type="button" class="btn btn--ghost" [disabled]="busy()" (click)="store.goTo(2)">← Corregir datos</button>
+    <span class="step-nav__spacer"></span>
+    <button
+      type="button"
+      class="btn btn--primary btn--lg"
+      [disabled]="missing().length > 0 || busy()"
+      (click)="store.goTo(4)"
+    >
+      Ver Vista Previa →
+    </button>
+  </div>
+
+  @if (missing().length) {
+    <div class="alert alert--warn missing" role="status">
+      <span class="alert__icon" aria-hidden="true">⚠️</span>
+      <div class="alert__body">
+        Para continuar te falta subir:
+        <ul>
+          @for (d of missing(); track d.id) {
+            <li>{{ d.name }}</li>
+          }
+        </ul>
+      </div>
+    </div>
+  }
+</section>

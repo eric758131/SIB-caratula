@@ -7,7 +7,6 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
-//posible error 
 class BranchController extends Controller
 {
     public function index(Request $request)
@@ -16,16 +15,11 @@ class BranchController extends Controller
         $status = $request->input('status', '');
 
         $branches = Branch::query()
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'ILIKE', "%{$search}%")
-                      ->orWhere('id', 'ILIKE', "%{$search}%");
-                });
-            })
+            ->whereSearch($search, ['name', 'id'])
             ->when($status !== '' && $status !== null, function ($query) use ($status) {
                 $query->where('status', filter_var($status, FILTER_VALIDATE_BOOLEAN));
             })
-            ->orderBy('name', 'asc')
+            ->sortable(['id' => 'id', 'name' => 'name', 'status' => 'status'], 'name')
             ->paginate(10)
             ->withQueryString();
 
@@ -45,7 +39,7 @@ class BranchController extends Controller
                 'string',
                 'min:3',
                 'max:200',
-                'regex:/^[\pL\s\.\-\(\)\/]+$/u',
+                'regex:/^[\pL\pN\s\.\-\(\)\/]+$/u',
                 'not_regex:/^\s|\s$/',
                 'not_regex:/\s{2,}/',
                 Rule::unique('branches', 'name')->where(function ($query) use ($request) {
@@ -86,7 +80,7 @@ class BranchController extends Controller
                 'string',
                 'min:3',
                 'max:200',
-                'regex:/^[\pL\s\.\-\(\)\/]+$/u',
+                'regex:/^[\pL\pN\s\.\-\(\)\/]+$/u',
                 'not_regex:/^\s|\s$/',
                 'not_regex:/\s{2,}/',
                 Rule::unique('branches', 'name')

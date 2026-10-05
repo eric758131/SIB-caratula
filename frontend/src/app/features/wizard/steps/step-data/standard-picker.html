@@ -1,0 +1,58 @@
+<div class="picker">
+  <div class="picker__search">
+    <span class="picker__icon" aria-hidden="true">🔎</span>
+    <input
+      class="input"
+      type="search"
+      autocomplete="off"
+      placeholder="Busca una norma por nombre o país…"
+      aria-label="Buscar norma técnica"
+      [value]="query()"
+      (input)="onInput($event)"
+      (focus)="onFocus()"
+      (keydown.enter)="$event.preventDefault(); pickFirst()"
+      (keydown.escape)="open.set(false)"
+    />
+  </div>
+
+  @if (open()) {
+    <div class="picker__results scroll-thin" role="listbox" aria-label="Normas técnicas">
+      @for (s of available(); track s.id) {
+        <button type="button" class="picker__result" role="option" (click)="pick(s)">
+          <span>
+            <strong>{{ s.name }}</strong>
+            @if (s.country) {
+              <small>{{ s.country }}</small>
+            }
+          </span>
+          <span class="chip">+ Agregar</span>
+        </button>
+      } @empty {
+        <div class="picker__no-results">
+          @if (query().trim()) {
+            No encontramos normas con "<strong>{{ query() }}</strong>".
+          } @else {
+            Ya agregaste todas las normas disponibles.
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<div class="person-list">
+  @for (s of selected(); track s.id) {
+    <div class="person">
+      <span class="person__avatar" aria-hidden="true">📐</span>
+      <div class="person__info">
+        <strong>{{ s.name }}</strong>
+        <small>{{ s.country || 'Sin país' }}</small>
+      </div>
+      <button type="button" class="icon-btn" [attr.aria-label]="'Quitar ' + s.name" title="Quitar" (click)="store.removeStandard(s.id)">
+        ✕
+      </button>
+    </div>
+  } @empty {
+    <div class="empty">Aún no agregaste normas. Es opcional.</div>
+  }
+</div>

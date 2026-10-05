@@ -13,21 +13,29 @@ return new class extends Migration
     {
         Schema::create('parameters', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 200);
+
+            $table->string('name', 200)->unique();
             $table->text('description')->nullable();
-            $table->string('image_1')->nullable();        // imagen 1
-            $table->text('example')->nullable();          // ejemplo
-            $table->string('image_2')->nullable();        // imagen 2
-            $table->text('important_notes')->nullable();  // notas importantes
-            $table->string('image_3')->nullable();        // imagen 3
-            $table->string('unit_of_measure')->nullable();
+            $table->string('unit_of_measure', 20)->nullable();
+
+            // Clasificación funcional
             $table->enum('parameter_type', [
+                'parametrico',
                 'caratula',
-                'parametrico'
-            ])->default('caratula');
+                'judicial',
+                'direccional',
+            ])->default('parametrico');
+
+            // Tipo de dato que debe ingresarse
+            $table->enum('data_type', [
+                'numero',
+                'texto',
+                'fecha',
+                'booleano',
+            ])->default('texto');
+
             $table->boolean('status')->default(true);
             $table->timestamps();
-
         });
     }
 

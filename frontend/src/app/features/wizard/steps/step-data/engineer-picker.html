@@ -1,0 +1,217 @@
+@if (recommended().length) {
+  <p class="section-help">
+    💡 Especialidad recomendada para este proyecto:
+    @for (s of recommended(); track s) {
+      <span class="chip">{{ s }}</span>
+    }
+  </p>
+}
+
+<div class="picker">
+  <div class="picker__search">
+    <span class="picker__icon" aria-hidden="true">🔎</span>
+    <input
+      class="input"
+      type="search"
+      inputmode="numeric"
+      autocomplete="off"
+      placeholder="Escribe el RNI completo del ingeniero…"
+      aria-label="RNI del ingeniero proyectista"
+      [value]="query()"
+      (input)="onInput($event)"
+      (focus)="onFocus()"
+      (keydown.enter)="$event.preventDefault(); pickFirst()"
+      (keydown.escape)="open.set(false)"
+    />
+    @if (searching()) {
+      <span class="spinner" aria-label="Buscando"></span>
+    }
+  </div>
+
+  @if (open()) {
+    <div class="picker__results scroll-thin" role="listbox" aria-label="Resultados de ingenieros">
+      @for (e of available(); track e.id) {
+        <button type="button" class="picker__result" role="option" (click)="pick(e)">
+          <span>
+            <strong>Ing. {{ e.full_name }}</strong>
+            <small>
+              RNI {{ e.rni }}
+              @if (e.specialties.length) {
+                · {{ e.specialties.join(', ') }}
+              }
+            </small>
+          </span>
+          @if (matches(e)) {
+            <span class="chip" title="Tiene la especialidad recomendada para este proyecto">✔ Recomendado</span>
+          } @else {
+            <span class="chip chip--muted">+ Agregar</span>
+          }
+        </button>
+      } @empty {
+        @if (!searching()) {
+          <div class="picker__no-results">
+            @if (!query().trim()) {
+              Escribe el número de RNI completo para buscar al ingeniero.
+            } @else if (alreadyAdded()) {
+              El ingeniero con RNI <strong>{{ query().trim() }}</strong> ya está agregado.
+            } @else {
+              No hay un ingeniero activo con el RNI <strong>{{ query().trim() }}</strong>. Revisa que esté completo.
+            }
+          </div>
+        }
+      }
+      <div class="picker__no-results">
+        <button type="button" class="btn btn--ghost btn--sm" (click)="startCreate()">➕ Nuevo ingeniero</button>
+      </div>
+    </div>
+  }
+</div>
+
+@if (creating()) {
+  <form class="quick-create" (submit)="$event.preventDefault(); save()">
+    <div class="quick-create__title">➕ Registrar nuevo ingeniero</div>
+    <p class="field__hint" style="margin-bottom: 12px">
+      Se registrará como <strong>activo</strong>. Los campos con <span class="req">*</span> son obligatorios.
+    </p>
+
+    @if (!options()) {
+      @if (!error()) {
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      }
+    } @else {
+      @let f = form();
+      @let o = options()!;
+      <div class="form-grid">
+        <div class="field">
+          <label class="field__label" for="eng-name">Nombre(s) <span class="req">*</span></label>
+          <input id="eng-name" class="input" maxlength="200" [class.is-invalid]="fieldError(error(), 'name')" [value]="f.name" (input)="set('name', $event)" />
+          @if (fieldError(error(), 'name'); as msg) { <span class="field__error">{{ msg }}</span> }
+        </div>
+        <div class="field">
+          <label class="field__label" for="eng-father">Apellido paterno <span class="req">*</span></label>
+          <input id="eng-father" class="input" maxlength="100" [class.is-invalid]="fieldError(error(), 'father_last_name')" [value]="f.father_last_name" (input)="set('father_last_name', $event)" />
+          @if (fieldError(error(), 'father_last_name'); as msg) { <span class="field__error">{{ msg }}</span> }
+        </div>
+        <div class="field">
+          <label class="field__label" for="eng-mother">Apellido materno</label>
+          <input id="eng-mother" class="input" maxlength="100" [class.is-invalid]="fieldError(error(), 'mother_last_name')" [value]="f.mother_last_name" (input)="set('mother_last_name', $event)" />
+          @if (fieldError(error(), 'mother_last_name'); as msg) { <span class="field__error">{{ msg }}</span> }
+        </div>
+        <div class="field">
+          <label class="field__label" for="eng-rni">RNI <span class="req">*</span></label>
+          <input id="eng-rni" class="input" inputmode="numeric" maxlength="20" placeholder="Solo números" [class.is-invalid]="fieldError(error(), 'rni')" [value]="f.rni" (input)="set('rni', $event)" />
+          @if (fieldError(error(), 'rni'); as msg) { <span class="field__error">{{ msg }}</span> }
+          @else { <span class="field__hint">Registro Nacional de Ingenieros.</span> }
+        </div>
+        <div class="field">
+          <label class="field__label" for="eng-ci">CI <span class="req">*</span></label>
+          <input id="eng-ci" class="input" maxlength="20" placeholder="Ej.: 1234567 o 1234567-1A" [class.is-invalid]="fieldError(error(), 'ci')" [value]="f.ci" (input)="set('ci', $event)" />
+          @if (fieldError(error(), 'ci'); as msg) { <span class="field__error">{{ msg }}</span> }
+        </div>
+        <div class="field">
+          <label class="field__label" for="eng-dep">Departamental SIB <span class="req">*</span></label>
+          <select id="eng-dep" class="select" [value]="f.sib_departmental" (change)="set('sib_departmental', $event)">
+            @for (d of o.sib_departmentals; track d.value) {
+              <option [value]="d.value">{{ d.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label class="field__label" for="eng-branch">Rama <span class="req">*</span></label>
+          <select id="eng-branch" class="select" [class.is-invalid]="fieldError(error(), 'branch_id')" [value]="f.branch_id" (change)="set('branch_id', $event)">
+            <option value="">Selecciona…</option>
+            @for (b of o.branches; track b.id) {
+              <option [value]="b.id">{{ b.name }}</option>
+            }
+          </select>
+          @if (fieldError(error(), 'branch_id'); as msg) { <span class="field__error">{{ msg }}</span> }
+        </div>
+        <div class="field">
+          <label class="field__label" for="eng-uni">Universidad <span class="req">*</span></label>
+          <select id="eng-uni" class="select" [class.is-invalid]="fieldError(error(), 'university_id')" [value]="f.university_id" (change)="set('university_id', $event)">
+            <option value="">Selecciona…</option>
+            @for (u of o.universities; track u.id) {
+              <option [value]="u.id">{{ u.name }}</option>
+            }
+          </select>
+          @if (fieldError(error(), 'university_id'); as msg) { <span class="field__error">{{ msg }}</span> }
+        </div>
+        <div class="field">
+          <label class="field__label" for="eng-phone">Teléfono</label>
+          <input id="eng-phone" class="input" type="tel" maxlength="30" [class.is-invalid]="fieldError(error(), 'phone')" [value]="f.phone" (input)="set('phone', $event)" />
+          @if (fieldError(error(), 'phone'); as msg) { <span class="field__error">{{ msg }}</span> }
+        </div>
+        <div class="field">
+          <label class="field__label" for="eng-email">Correo</label>
+          <input id="eng-email" class="input" type="email" maxlength="100" [class.is-invalid]="fieldError(error(), 'email')" [value]="f.email" (input)="set('email', $event)" />
+          @if (fieldError(error(), 'email'); as msg) { <span class="field__error">{{ msg }}</span> }
+        </div>
+      </div>
+
+      @if (o.specialties.length) {
+        <div class="field" style="margin-top: 14px">
+          <span class="field__label">Especialidades</span>
+          <div class="specialty-checks">
+            @for (s of o.specialties; track s.id) {
+              <label [class.is-active]="f.specialties.includes(s.id)">
+                <input type="checkbox" [checked]="f.specialties.includes(s.id)" (change)="toggleSpecialty(s.id)" />
+                {{ s.name }}
+                @if (recommended().includes(s.name)) {
+                  <span title="Recomendada para este proyecto">★</span>
+                }
+              </label>
+            }
+          </div>
+        </div>
+      }
+    }
+
+    @if (error(); as e) {
+      @if (!hasFieldErrors(e)) {
+        <div class="alert alert--error" style="margin-top: 12px">
+          <span class="alert__icon" aria-hidden="true">❌</span><span class="alert__body">{{ e.message }}</span>
+        </div>
+      }
+    }
+
+    <div class="quick-create__actions">
+      <button type="button" class="btn btn--ghost" (click)="creating.set(false)">Cancelar</button>
+      <button type="submit" class="btn btn--primary" [disabled]="saving() || !canSave()">
+        @if (saving()) {
+          <span class="spinner"></span>
+        }
+        Guardar y agregar
+      </button>
+    </div>
+  </form>
+}
+
+<div class="person-list">
+  @for (e of store.projectists(); track e.id) {
+    <div class="person" [class.is-principal]="e.is_principal">
+      <span class="person__avatar" aria-hidden="true">{{ initials(e.full_name) }}</span>
+      <div class="person__info">
+        <strong>Ing. {{ e.full_name }}</strong>
+        <small>RNI {{ e.rni }}</small>
+      </div>
+      @if (store.projectists().length > 1) {
+        <button
+          type="button"
+          class="principal-toggle"
+          [class.is-active]="e.is_principal"
+          [attr.aria-pressed]="e.is_principal"
+          title="El proyectista principal aparece primero en la carátula"
+          (click)="store.setPrincipalProjectist(e.id)"
+        >
+          ★ {{ e.is_principal ? 'Principal' : 'Hacer principal' }}
+        </button>
+      }
+      <button type="button" class="icon-btn" [attr.aria-label]="'Quitar a ' + e.full_name" title="Quitar" (click)="store.removeProjectist(e.id)">
+        ✕
+      </button>
+    </div>
+  } @empty {
+    <div class="empty">Aún no agregaste ingenieros proyectistas.</div>
+  }
+</div>

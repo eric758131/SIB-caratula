@@ -1,0 +1,47 @@
+<div
+  class="option-list scroll-thin"
+  [class.is-disabled]="disabled()"
+  role="listbox"
+  [attr.aria-label]="label()"
+  [attr.aria-disabled]="disabled()"
+  (mouseleave)="hovered.emit(null)"
+>
+  @if (disabled()) {
+    <div class="empty">{{ disabledText() }}</div>
+  } @else if (loading()) {
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="skeleton"></div>
+    }
+  } @else {
+    @for (item of items(); track item.id) {
+      <button
+        type="button"
+        class="option"
+        role="option"
+        [class.is-active]="item.id === selectedId()"
+        [attr.aria-selected]="item.id === selectedId()"
+        (click)="picked.emit(item)"
+        (mouseenter)="hovered.emit(item)"
+        (focus)="hovered.emit(item)"
+        (blur)="hovered.emit(null)"
+      >
+        @if (item.images.length) {
+          <img class="option__thumb" [src]="item.images[0]" alt="" loading="lazy" />
+        }
+        <span class="option__text">
+          <span class="option__name">{{ item.name }}</span>
+          @if (item.code) {
+            <span class="option__meta"><span class="chip chip--muted">{{ item.code }}</span></span>
+          }
+        </span>
+        @if (item.id === selectedId()) {
+          <span class="option__check" aria-hidden="true">✓</span>
+        } @else if (hasHelp(item)) {
+          <span class="option__info" title="Tiene explicación en el panel de ayuda" aria-hidden="true">ⓘ</span>
+        }
+      </button>
+    } @empty {
+      <div class="empty">{{ emptyText() }}</div>
+    }
+  }
+</div>

@@ -20,6 +20,7 @@ class SecondaryCategory extends Model
         'image_2',
         'important_notes',
         'image_3',
+        'definition',
         'status',
     ];
 
@@ -30,6 +31,11 @@ class SecondaryCategory extends Model
     public function primaryCategory(): BelongsTo
     {
         return $this->belongsTo(PrimaryCategory::class);
+    }
+
+    public function tertiaryCategories(): HasMany
+    {
+        return $this->hasMany(TertiaryCategory::class);
     }
 
     public function caratulas(): HasMany

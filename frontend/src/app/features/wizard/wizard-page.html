@@ -1,0 +1,77 @@
+<div class="sib-layout">
+  <div class="sib-content scroll-thin" #content>
+    <nav class="steps" aria-label="Pasos del trámite">
+      @for (s of steps; track s.id) {
+        <button
+          type="button"
+          class="steps__item"
+          [class.is-active]="store.step() === s.id"
+          [class.is-done]="isDone(s.id)"
+          [disabled]="store.step() !== s.id && !store.canVisit(s.id)"
+          [attr.aria-current]="store.step() === s.id ? 'step' : null"
+          [title]="store.canVisit(s.id) || store.step() === s.id ? s.label : 'Completa los pasos anteriores primero'"
+          (click)="store.goTo(s.id)"
+        >
+          <span class="steps__num">{{ isDone(s.id) && store.step() !== s.id ? '✓' : s.id }}</span>
+          <span class="steps__label">{{ s.label }}</span>
+        </button>
+      }
+    </nav>
+
+    @if (store.catalogError(); as error) {
+      <div class="alert alert--error" role="alert" style="margin-bottom: 20px">
+        <span class="alert__icon" aria-hidden="true">❌</span>
+        <span class="alert__body">{{ error }}</span>
+        <button type="button" class="btn btn--ghost btn--sm" (click)="retry()">Reintentar</button>
+      </div>
+    }
+
+    @if (store.resuming()) {
+      <section class="card fade-in" style="text-align: center">
+        <span class="spinner" style="width: 36px; height: 36px; color: var(--c-primary)"></span>
+        <p class="step-lead" style="margin: 16px 0 0">Cargando tu trámite…</p>
+      </section>
+    } @else {
+      @switch (store.step()) {
+        @case (1) {
+          <app-step-category />
+        }
+        @case (2) {
+          <app-step-data />
+        }
+        @case (3) {
+          <app-step-documents />
+        }
+        @case (4) {
+          <app-step-preview />
+        }
+        @case (5) {
+          <app-step-download />
+        }
+      }
+    }
+  </div>
+
+  <aside class="sib-guide" [class.is-open]="store.helpOpen()" aria-label="Panel de ayuda">
+    <app-help-panel />
+  </aside>
+</div>
+
+<!-- Móvil: la ayuda se abre como hoja inferior -->
+@if (store.helpOpen()) {
+  <div class="help-backdrop" (click)="store.helpOpen.set(false)"></div>
+}
+<button
+  type="button"
+  class="help-fab"
+  [class.has-news]="!!store.pinnedHelp()"
+  aria-label="Abrir panel de ayuda"
+  (click)="store.helpOpen.set(true)"
+>
+  💡 Ayuda
+</button>
+
+<!-- Solo visible al imprimir (window.print) -->
+<div class="print-root" aria-hidden="true">
+  <app-caratula [data]="store.caratula()" />
+</div>

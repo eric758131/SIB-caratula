@@ -48,8 +48,8 @@ class TertiaryCategory extends Model
 
     public function parameters(): BelongsToMany
     {
-        return $this->belongsToMany(Parameter::class, 'tariffs_parameters')
-                    ->withPivot('tariff_index')
+        return $this->belongsToMany(Parameter::class, 'tertiary_categories_parameters')
+                    ->withPivot('id', 'tariff_index', 'is_required', 'status')
                     ->withTimestamps();
     }
 
@@ -63,9 +63,9 @@ class TertiaryCategory extends Model
         return $this->hasMany(Procedure::class);
     }
 
-    public function tariffParameters(): HasMany
+    public function tertiaryCategoryParameters(): HasMany
     {
-        return $this->hasMany(TariffParameter::class);
+        return $this->hasMany(TertiaryCategoryParameter::class);
     }
 
     public function requiredDocuments(): BelongsToMany
@@ -76,11 +76,5 @@ class TertiaryCategory extends Model
             'tertiary_category_id',
             'required_document_id'
         )->withTimestamps();
-    }  
-
-    public function documents(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
-    {
-        return $this->belongsToMany(Document::class, 'tertiary_categories_documents')
-                    ->withTimestamps();
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Support\QueryMacros;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Paginación del panel en español y con los colores de la S.I.B.
+        Paginator::defaultView('pagination.sib');
+
+        // whereSearch() y sortable() para los listados
+        QueryMacros::register();
     }
 }

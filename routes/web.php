@@ -12,6 +12,9 @@ use App\Http\Controllers\UniversityController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\SpecialtyController;
 use App\Http\Controllers\EngineerController;
+use App\Http\Controllers\ParameterController;
+use App\Http\Controllers\OwnerController;
+use App\Http\Controllers\RequiredDocumentController;
 use Illuminate\Support\Facades\Route;
 
 // Pública
@@ -36,4 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('branches', BranchController::class)->except(['show']);
     Route::resource('specialties', SpecialtyController::class)->except(['show']);
     Route::resource('engineers', EngineerController::class)->except(['show']);
+    Route::resource('parameters', ParameterController::class)->except(['show']);
+    Route::resource('owners', OwnerController::class)->except(['show']);
+    Route::resource('required-documents', RequiredDocumentController::class)->except(['show']);
 });

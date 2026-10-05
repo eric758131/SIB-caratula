@@ -13,13 +13,25 @@ return new class extends Migration
     {
         Schema::create('procedures_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('procedure_id')->constrained('procedures')->cascadeOnUpdate()->restrictOnDelete();
-            $table->foreignId('tariff_parameter_id')->constrained('tariffs_parameters')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->decimal('parameter_procedure_quantity', 10, 2)->default(0);
-            $table->string('unit_of_measure')->nullable();
-            $table->decimal('tariff_index', 10, 6)->default(0);
-            $table->decimal('parameter_procedure_subtotal', 10, 2)->default(0);
+            $table->foreignId('procedure_id')->constrained('procedures')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignId('tertiary_category_parameter_id')->nullable()->constrained('tertiary_categories_parameters')->cascadeOnUpdate()->nullOnDelete();
+            // Solo una de estas columnas debería tener valor
+            $table->decimal('numeric_value', 16, 6)->nullable();
+            $table->text('text_value')->nullable();
+            $table->date('date_value')->nullable();
+            $table->boolean('boolean_value')->nullable();
+
+            // Datos históricos utilizados en el cálculo
+            $table->string('unit_of_measure', 20)->nullable();
+            $table->decimal('tariff_index', 16, 6)->nullable();
+            $table->decimal('subtotal', 12, 2)->nullable();
+
             $table->timestamps();
+
+            $table->unique([
+                'procedure_id',
+                'tertiary_category_parameter_id',
+            ]);
         });
     }
 

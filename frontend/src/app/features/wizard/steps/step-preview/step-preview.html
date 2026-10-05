@@ -1,0 +1,63 @@
+<section class="card fade-in">
+  <h2 class="step-title">Vista <span>Previa</span></h2>
+  <p class="step-lead">Así se verá tu carátula en hoja tamaño carta. Revísala con calma antes de enviar el trámite.</p>
+
+  <div class="preview-layout">
+    <div class="preview-paper">
+      <app-caratula [data]="store.caratula()" />
+    </div>
+
+    <div class="panel">
+      <div class="section-label">✔ Revisa antes de enviar</div>
+      <ul class="checklist">
+        @for (c of checks(); track c.text) {
+          <li>
+            <span aria-hidden="true">{{ c.ok ? '✅' : '⚪' }}</span>
+            <span>{{ c.text }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+
+    @if (store.submitError(); as e) {
+      <div class="alert alert--error" role="alert">
+        <span class="alert__icon" aria-hidden="true">❌</span>
+        <span class="alert__body">{{ submitMessage(e) }}</span>
+      </div>
+    }
+  </div>
+
+  @if (confirming()) {
+    <div class="confirm-box" role="alertdialog" aria-labelledby="confirm-title">
+      <strong id="confirm-title">¿Enviar el trámite N° {{ store.procedure()?.number }}?</strong>
+      <p>Después de enviarlo ya no podrás modificar los datos ni los documentos.</p>
+      <div class="quick-create__actions">
+        <button type="button" class="btn btn--ghost" (click)="confirming.set(false)">Revisar otra vez</button>
+        <button type="button" class="btn btn--primary" [disabled]="store.submitting()" (click)="submit()">
+          @if (store.submitting()) {
+            <span class="spinner"></span>
+          }
+          Sí, enviar trámite
+        </button>
+      </div>
+    </div>
+  }
+
+  <div class="step-nav">
+    <button type="button" class="btn btn--ghost" (click)="store.goTo(3)">← Documentos</button>
+    <button type="button" class="btn btn--ghost" (click)="store.goTo(2)">Corregir datos</button>
+    <button type="button" class="btn btn--ghost" (click)="print()" title="Imprime solo la carátula">🖨️ Imprimir</button>
+    <span class="step-nav__spacer"></span>
+    <button
+      type="button"
+      class="btn btn--primary btn--lg"
+      [disabled]="store.missingDocuments().length > 0 || store.submitting() || confirming()"
+      (click)="confirming.set(true)"
+    >
+      📨 Todo está bien, enviar trámite
+    </button>
+  </div>
+  <p class="field__hint" style="text-align: right; margin-top: 8px">
+    Una vez enviado, el trámite ya no se puede modificar.
+  </p>
+</section>

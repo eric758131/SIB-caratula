@@ -16,17 +16,11 @@ class PrimaryCategoryController extends Controller
         $status = $request->input('status', '');
 
         $primaryCategories = PrimaryCategory::query()
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'ILIKE', "%{$search}%")
-                      ->orWhere('description', 'ILIKE', "%{$search}%")
-                      ->orWhere('id', 'ILIKE', "%{$search}%");
-                });
-            })
+            ->whereSearch($search, ['name', 'description', 'id'])
             ->when($status !== '' && $status !== null, function ($query) use ($status) {
                 $query->where('status', filter_var($status, FILTER_VALIDATE_BOOLEAN));
             })
-            ->orderBy('name', 'asc')
+            ->sortable(['id' => 'id', 'name' => 'name', 'status' => 'status'], 'name')
             ->paginate(10)
             ->withQueryString();
 

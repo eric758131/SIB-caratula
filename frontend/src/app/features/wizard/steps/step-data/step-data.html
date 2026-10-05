@@ -1,0 +1,197 @@
+<section class="card fade-in">
+  <h2 class="step-title">Datos del <span>Proyecto</span></h2>
+  <p class="step-lead">
+    Completa la información que irá en la carátula. Abre la pestaña <strong>📄 Carátula</strong> del panel derecho para
+    verla actualizarse mientras escribes.
+  </p>
+
+  <div class="breadcrumb">
+    <span>{{ store.primary()?.name }}</span>
+    <span class="sep">›</span>
+    <span>{{ store.secondary()?.name }}</span>
+    <span class="sep">›</span>
+    <span>{{ store.typeName() }}</span>
+    <button type="button" class="btn btn--link btn--sm" (click)="store.goTo(1)">Cambiar</button>
+  </div>
+
+  <!-- Título -->
+  <div class="block">
+    <div class="section-label"><span class="num">1</span> Título del proyecto</div>
+    <p class="section-help">Escribe el título del proyecto tal como debe aparecer en la carátula.</p>
+
+    <div class="field">
+      <label class="field__label" for="project-title">Título que aparecerá en la carátula <span class="req">*</span></label>
+      <input
+        id="project-title"
+        class="input input--lg"
+        maxlength="500"
+        autocomplete="off"
+        placeholder="Ej.: VIVIENDA UNIFAMILIAR – FAMILIA MAMANI"
+        [value]="store.title()"
+        (input)="store.setTitle(value($event))"
+        (focus)="titleFieldHelp()"
+      />
+      <span class="field__hint">Se guardará en MAYÚSCULAS · {{ store.title().length }}/500</span>
+    </div>
+  </div>
+
+  <!-- Parámetros -->
+  <div class="block">
+    <div class="section-label"><span class="num">2</span> Parámetros del proyecto</div>
+
+    @if (store.isInformes()) {
+      <div class="alert alert--info">
+        <span class="alert__icon" aria-hidden="true">ℹ️</span>
+        <span class="alert__body">Los informes no llevan parámetros. Continúa con la norma y los interesados.</span>
+      </div>
+    } @else if (store.loadingDetail()) {
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    } @else if (!store.formParameters().length) {
+      <div class="alert alert--info">
+        <span class="alert__icon" aria-hidden="true">ℹ️</span>
+        <span class="alert__body">Este tipo de proyecto no tiene parámetros para llenar. Puedes continuar.</span>
+      </div>
+    } @else {
+      <p class="section-help">
+        Los marcados con <span class="req">*</span> son obligatorios. Haz clic en "¿Qué es?" para ver en la ayuda qué
+        significa cada uno.
+      </p>
+      <div class="param-list">
+        @for (p of store.formParameters(); track p.id) {
+          <app-param-input [param]="p" />
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Ubicación (parámetros direccionales) con mapa -->
+  @if (hasMap()) {
+    <div class="block">
+      <div class="section-label"><span class="num">3</span> Ubicación del proyecto</div>
+      <p class="section-help">Marca el lugar en el mapa: la dirección se copia sola en los campos de abajo.</p>
+      <app-address-map />
+      <div class="param-list">
+        @for (p of store.addressParameters(); track p.id) {
+          <app-param-input [param]="p" />
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Normas -->
+  <div class="block">
+    <div class="section-label"><span class="num">{{ nextNum() }}</span> Norma técnica</div>
+    @if (!store.standardsCatalog().length) {
+      <div class="alert alert--info">
+        <span class="alert__icon" aria-hidden="true">ℹ️</span>
+        <span class="alert__body">Aún no hay normas registradas en el sistema. Puedes continuar sin seleccionar.</span>
+      </div>
+    } @else {
+      <p class="section-help">
+        Agrega la norma de diseño, verificación o consulta que corresponde a tu proyecto, informe o peritaje.
+      </p>
+      <app-standard-picker />
+    }
+  </div>
+
+  <!-- Interesados -->
+  <div class="block">
+    <div class="section-label"><span class="num">{{ nextNum() + 1 }}</span> Interesados (propietarios)</div>
+    <p class="section-help">
+      Propietarios o solicitantes del proyecto (personas o empresas). El nombre que registres es el que aparecerá en la carátula.
+    </p>
+    <app-owner-picker />
+  </div>
+
+  <!-- Proyectistas -->
+  <div class="block">
+    <div class="section-label"><span class="num">{{ nextNum() + 2 }}</span> Ingeniero(s) proyectista(s)</div>
+    <app-engineer-picker />
+  </div>
+
+  <!-- Ubicación opcional: solo si la terciaria no pide parámetros direccionales -->
+  @if (!hasMap()) {
+    <details class="collapsible" [open]="!!(store.address() || store.zone() || store.municipality())" (toggle)="onLocationToggle($event)">
+      <summary>📍 Ubicación del proyecto <span class="field__hint">(opcional)</span></summary>
+      <div class="form-grid">
+        <div class="field" style="grid-column: 1 / -1">
+          <label class="field__label" for="address">Dirección</label>
+          <input id="address" class="input" maxlength="500" placeholder="Calle, número, edificio…" [value]="store.address()" (input)="store.setLocation('address', value($event))" />
+        </div>
+        <div class="field">
+          <label class="field__label" for="zone">Zona</label>
+          <input id="zone" class="input" maxlength="255" [value]="store.zone()" (input)="store.setLocation('zone', value($event))" />
+        </div>
+        <div class="field">
+          <label class="field__label" for="municipality">Municipio</label>
+          <input id="municipality" class="input" maxlength="255" [value]="store.municipality()" (input)="store.setLocation('municipality', value($event))" />
+        </div>
+      </div>
+    </details>
+  }
+
+  @if (store.procedure() && store.dirty()) {
+    <div class="alert alert--info">
+      <span class="alert__icon" aria-hidden="true">✏️</span>
+      <span class="alert__body">Hiciste cambios: al continuar se actualizará tu borrador N° {{ store.procedure()!.number }}.</span>
+    </div>
+  }
+
+  @if (store.saveError(); as error) {
+    <div class="alert alert--error" role="alert">
+      <span class="alert__icon" aria-hidden="true">❌</span>
+      <div class="alert__body">
+        {{ issues().length ? 'Hay datos por corregir:' : error.message }}
+        @if (issues().length) {
+          <ul>
+            @for (i of issues(); track $index) {
+              <li>
+                {{ i.message }}
+                @if (i.step !== 2) {
+                  <button type="button" class="btn btn--link btn--sm" (click)="store.goTo(i.step)">Ir a corregir (paso {{ i.step }})</button>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="step-nav">
+    <button type="button" class="btn btn--ghost" (click)="store.goTo(1)">← Atrás</button>
+    <span class="step-nav__spacer"></span>
+    <button
+      type="button"
+      class="btn btn--primary btn--lg"
+      [disabled]="store.step2Missing().length > 0 || store.saving()"
+      (click)="saveAndContinue()"
+    >
+      @if (store.saving()) {
+        <span class="spinner"></span> Guardando…
+      } @else {
+        Continuar a Documentos →
+      }
+    </button>
+  </div>
+  @if (!store.step2Missing().length) {
+    <p class="field__hint" style="text-align: right; margin-top: 8px">
+      Se guardará como borrador: podrás modificarlo hasta que lo envíes.
+    </p>
+  }
+
+  @if (store.step2Missing().length) {
+    <div class="alert alert--warn missing" role="status">
+      <span class="alert__icon" aria-hidden="true">⚠️</span>
+      <div class="alert__body">
+        Para continuar te falta:
+        <ul>
+          @for (m of store.step2Missing(); track m) {
+            <li>{{ m }}</li>
+          }
+        </ul>
+      </div>
+    </div>
+  }
+</section>

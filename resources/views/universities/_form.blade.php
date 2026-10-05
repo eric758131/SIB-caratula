@@ -6,7 +6,7 @@
            value="{{ old('name', $university->name ?? '') }}"
            maxlength="200" required autofocus
            placeholder="Ej: Universidad Mayor de San Andrés"
-           class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500
+           class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500
                   @error('name') border-red-400 @else border-gray-300 @enderror">
     @error('name')
         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
@@ -21,7 +21,7 @@
     <label class="inline-flex items-center gap-2 cursor-pointer">
         <input type="checkbox" name="status" value="1"
                {{ old('status', $university->status ?? true) ? 'checked' : '' }}
-               class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+               class="rounded border-gray-300 text-brand-600 shadow-sm focus:ring-brand-500">
         <span class="text-sm text-gray-700">Activo</span>
     </label>
     @error('status')

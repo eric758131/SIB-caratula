@@ -6,7 +6,7 @@
     <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
         <h2 class="text-2xl font-semibold text-gray-800">Normas</h2>
         <a href="{{ route('standards.create') }}"
-           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-sm">
+           class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded shadow-sm">
             <span class="text-lg leading-none">+</span>
             <span>Nueva norma</span>
         </a>
@@ -15,6 +15,7 @@
     {{-- Filtros --}}
     <form method="GET" action="{{ route('standards.index') }}"
           class="bg-white rounded-lg shadow p-4 mb-6">
+        <x-keep-sort />
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
 
             <div class="md:col-span-2">
@@ -23,7 +24,7 @@
                 </label>
                 <input type="text" name="search" id="search" value="{{ $search }}"
                        placeholder="Nombre, descripción o ID..."
-                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                       class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
             </div>
 
             <div>
@@ -31,7 +32,7 @@
                     País
                 </label>
                 <select name="country_id" id="country_id"
-                        class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
                     <option value="">Todos</option>
                     @foreach ($countries as $country)
                         <option value="{{ $country->id }}" {{ (string) $countryId === (string) $country->id ? 'selected' : '' }}>
@@ -46,7 +47,7 @@
                     Estado
                 </label>
                 <select name="status" id="status"
-                        class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500">
                     <option value="" {{ $status === '' ? 'selected' : '' }}>Todos</option>
                     <option value="1" {{ $status === '1' ? 'selected' : '' }}>Activos</option>
                     <option value="0" {{ $status === '0' ? 'selected' : '' }}>Inactivos</option>
@@ -74,11 +75,11 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-16">#</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-48">País</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-40">Vigencia</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">Estado</th>
+                        <x-sort-th column="id" class="w-16">#</x-sort-th>
+                        <x-sort-th column="name" default>Nombre</x-sort-th>
+                        <x-sort-th column="country" class="w-48">País</x-sort-th>
+                        <x-sort-th column="effective" class="w-40">Vigencia</x-sort-th>
+                        <x-sort-th column="status" class="w-32">Estado</x-sort-th>
                         <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider w-56">Acciones</th>
                     </tr>
                 </thead>
@@ -114,13 +115,13 @@
                             <td class="px-4 py-3 text-sm text-right">
                                 <div class="inline-flex items-center gap-3">
                                     <a href="{{ route('standards.edit', $standard) }}"
-                                       class="text-blue-600 hover:text-blue-800 font-medium">
+                                       class="text-brand-600 hover:text-brand-800 font-medium">
                                         Editar
                                     </a>
 
                                     <form action="{{ route('standards.destroy', $standard) }}"
                                           method="POST"
-                                          onsubmit="return confirm('¿Seguro que quieres {{ $standard->status ? 'desactivar' : 'reactivar' }} esta norma?');">
+                                          data-confirm="¿Seguro que quieres {{ $standard->status ? 'desactivar' : 'reactivar' }} esta norma?">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"

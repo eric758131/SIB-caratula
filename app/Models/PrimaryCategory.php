@@ -28,6 +28,16 @@ class PrimaryCategory extends Model implements HasMedia
         'status' => 'boolean',
     ];
 
+    /**
+     * Categoría especial: no usa terciaria, el usuario escribe un Topic.
+     */
+    public const NAME_INFORMES = 'INFORMES';
+
+    public function isInformes(): bool
+    {
+        return mb_strtoupper(trim($this->name), 'UTF-8') === self::NAME_INFORMES;
+    }
+
     public function secondaryCategories(): HasMany
     {
         return $this->hasMany(SecondaryCategory::class);

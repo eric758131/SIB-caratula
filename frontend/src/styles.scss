@@ -1,0 +1,11 @@
+/* Estilos globales del asistente de carátulas (look de caratulas-psi.vercel.app) */
+
+/* Mapa (Leaflet): sin esta hoja las piezas del mapa se ven desordenadas */
+@use 'leaflet/dist/leaflet';
+
+@use 'styles/tokens';
+@use 'styles/base';
+@use 'styles/components';
+@use 'styles/layout';
+@use 'styles/steps';
+@use 'styles/caratula';

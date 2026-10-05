@@ -11,7 +11,6 @@
     <div class="bg-white rounded-lg shadow p-6 max-w-2xl">
         <form method="POST" action="{{ route('specialties.store') }}">
             @csrf
-
             @include('specialties._form')
 
             <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
@@ -20,7 +19,7 @@
                     Cancelar
                 </a>
                 <button type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-sm">
+                        class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded shadow-sm">
                     Guardar
                 </button>
             </div>

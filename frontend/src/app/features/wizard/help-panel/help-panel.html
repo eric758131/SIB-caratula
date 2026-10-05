@@ -1,0 +1,140 @@
+<div class="guide__header">
+  <div class="guide__eyebrow">💡 Asistente S.I.B.</div>
+  <div class="guide__title-row">
+    <div class="guide__title">{{ showCaratula() ? 'Carátula en vivo' : 'Panel de Ayuda' }}</div>
+    @if (showTabs()) {
+      <div class="guide__tabs" role="tablist" aria-label="Contenido del panel">
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="store.helpTab() === 'ayuda'"
+          [attr.aria-selected]="store.helpTab() === 'ayuda'"
+          (click)="store.helpTab.set('ayuda')"
+        >
+          💡 Ayuda
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.is-active]="store.helpTab() === 'caratula'"
+          [attr.aria-selected]="store.helpTab() === 'caratula'"
+          (click)="store.helpTab.set('caratula')"
+        >
+          📄 Carátula
+        </button>
+      </div>
+    }
+    <button type="button" class="icon-btn guide__close" aria-label="Cerrar ayuda" (click)="store.helpOpen.set(false)">✕</button>
+  </div>
+</div>
+
+<div class="guide__body scroll-thin" aria-live="polite">
+  @if (showCaratula()) {
+    <p class="guide__live-hint">Se actualiza mientras completas los datos. Lo que está en gris aún falta.</p>
+    <app-caratula [data]="store.caratula()" />
+  } @else {
+    <!-- @for con un solo elemento: recrea el bloque (y su animación) cada vez que cambia la ayuda -->
+    @for (h of [store.activeHelp()]; track h) {
+      <div class="guide__content fade-in">
+        <div class="guide__hero">
+          <div class="guide__icon" aria-hidden="true">{{ h.icon }}</div>
+          <div class="guide__hero-eyebrow">{{ h.eyebrow }}</div>
+          <h3 class="guide__hero-title">{{ h.title }}</h3>
+        </div>
+
+        @if (h.description) {
+          <div>
+            <div class="guide__section-title">📖 ¿Qué es?</div>
+            <div class="guide__text">{{ h.description }}</div>
+          </div>
+        }
+
+        @if (h.definition) {
+          <div>
+            <div class="guide__section-title">📄 Definición</div>
+            <a class="btn btn--primary btn--sm" [href]="h.definition" target="_blank" rel="noopener">
+              Ver documento de definición
+            </a>
+          </div>
+        }
+
+        <!-- Orden: ¿Qué es? → imagen 1 → ejemplo → imagen 2 → importante → imagen 3 (sin imagen no se muestra nada) -->
+        @if (h.image1) {
+          <div class="guide__gallery guide__gallery--single">
+            <button type="button" (click)="openZoom(h.image1)" aria-label="Ampliar imagen 1">
+              <img [src]="h.image1" [alt]="'Imagen 1 de ' + h.title" loading="lazy" />
+            </button>
+          </div>
+        }
+
+        @if (h.example) {
+          <div>
+            <div class="guide__section-title">✏️ Ejemplo</div>
+            <div class="guide__example">{{ h.example }}</div>
+          </div>
+        }
+
+        @if (h.image2) {
+          <div class="guide__gallery guide__gallery--single">
+            <button type="button" (click)="openZoom(h.image2)" aria-label="Ampliar imagen 2">
+              <img [src]="h.image2" [alt]="'Imagen 2 de ' + h.title" loading="lazy" />
+            </button>
+          </div>
+        }
+
+        @if (h.importantNotes) {
+          <div class="alert alert--warn">
+            <span class="alert__icon" aria-hidden="true">📌</span>
+            <div class="alert__body"><strong>Importante:</strong> {{ h.importantNotes }}</div>
+          </div>
+        }
+
+        @if (h.image3) {
+          <div class="guide__gallery guide__gallery--single">
+            <button type="button" (click)="openZoom(h.image3)" aria-label="Ampliar imagen 3">
+              <img [src]="h.image3" [alt]="'Imagen 3 de ' + h.title" loading="lazy" />
+            </button>
+          </div>
+        }
+
+        @if (h.tips?.length) {
+          <div class="guide__tips">
+            @for (tip of h.tips; track $index) {
+              <div class="guide__tip">
+                <span aria-hidden="true">{{ h.isItem ? '👉' : numbers[$index] }}</span>
+                <span>{{ tip }}</span>
+              </div>
+            }
+          </div>
+        }
+
+        @if (h.warning) {
+          <div class="alert alert--warn">
+            <span class="alert__icon" aria-hidden="true">⚠️</span>
+            <span class="alert__body">{{ h.warning }}</span>
+          </div>
+        }
+
+        @if (h.isItem) {
+          <button type="button" class="btn btn--ghost btn--sm" style="align-self: center" (click)="store.pinnedHelp.set(null); store.hoverHelp.set(null)">
+            ← Ver la guía del paso
+          </button>
+        }
+      </div>
+    }
+  }
+</div>
+
+@if (zoomIndex() !== null) {
+  <div class="lightbox" role="dialog" aria-modal="true" aria-label="Imagen ampliada" (click)="zoomIndex.set(null)">
+    <img [src]="images()[zoomIndex()!]" alt="Imagen de referencia ampliada" (click)="$event.stopPropagation()" />
+    <div class="lightbox__bar" (click)="$event.stopPropagation()">
+      @if (images().length > 1) {
+        <button type="button" class="btn btn--ghost btn--sm" (click)="move(-1)">← Anterior</button>
+        <span>{{ zoomIndex()! + 1 }} / {{ images().length }}</span>
+        <button type="button" class="btn btn--ghost btn--sm" (click)="move(1)">Siguiente →</button>
+      }
+      <button type="button" class="btn btn--primary btn--sm" (click)="zoomIndex.set(null)">Cerrar ✕</button>
+    </div>
+  </div>
+}

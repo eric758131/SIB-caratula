@@ -1,0 +1,66 @@
+<div class="address-map">
+  <form class="address-map__search" role="search" (submit)="$event.preventDefault(); search()">
+    <input
+      class="input"
+      type="search"
+      autocomplete="off"
+      placeholder="Busca la dirección. Ej.: Av. 6 de Agosto, La Paz"
+      aria-label="Buscar dirección en el mapa"
+      [value]="query()"
+      (input)="onQuery($event)"
+      (focus)="showHelp()"
+    />
+    <button type="submit" class="btn btn--primary" [disabled]="searching() || query().trim().length < 3">
+      @if (searching()) {
+        <span class="spinner"></span>
+      }
+      🔎 Buscar
+    </button>
+    <button type="button" class="btn btn--ghost" [disabled]="locating()" (click)="useMyLocation()">
+      @if (locating()) {
+        <span class="spinner"></span>
+      }
+      📡 Mi ubicación
+    </button>
+  </form>
+
+  @if (results(); as list) {
+    @if (list.length) {
+      <div class="address-map__results" role="listbox" aria-label="Direcciones encontradas">
+        @for (r of list; track $index) {
+          <button type="button" role="option" (click)="choose(r)">📍 {{ r.label }}</button>
+        }
+      </div>
+    } @else {
+      <div class="alert alert--warn">
+        <span class="alert__icon" aria-hidden="true">⚠️</span>
+        <span class="alert__body">No encontramos esa dirección. Prueba con menos palabras o toca el lugar en el mapa.</span>
+      </div>
+    }
+  }
+
+  <div #canvas class="address-map__canvas" aria-label="Mapa: toca el lugar del proyecto"></div>
+
+  @if (status(); as s) {
+    <div
+      class="alert"
+      role="status"
+      [class.alert--info]="s.kind === 'busy'"
+      [class.alert--success]="s.kind === 'ok'"
+      [class.alert--warn]="s.kind === 'warn'"
+      [class.alert--error]="s.kind === 'error'"
+    >
+      <span class="alert__icon" aria-hidden="true">
+        @switch (s.kind) {
+          @case ('busy') { <span class="spinner"></span> }
+          @case ('ok') { ✅ }
+          @case ('warn') { ⚠️ }
+          @default { ❌ }
+        }
+      </span>
+      <span class="alert__body">{{ s.text }}</span>
+    </div>
+  } @else {
+    <p class="field__hint">Toca el lugar del proyecto en el mapa o búscalo arriba. Puedes arrastrar el 📍 para ajustarlo.</p>
+  }
+</div>

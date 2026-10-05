@@ -24,24 +24,28 @@ class EngineerController extends Controller
 
         $engineers = Engineer::query()
             ->with(['branch', 'university'])
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'ILIKE', "%{$search}%")
-                      ->orWhere('father_last_name', 'ILIKE', "%{$search}%")
-                      ->orWhere('mother_last_name', 'ILIKE', "%{$search}%")
-                      ->orWhere('rni', 'ILIKE', "%{$search}%")
-                      ->orWhere('ci', 'ILIKE', "%{$search}%")
-                      ->orWhere('email', 'ILIKE', "%{$search}%")
-                      ->orWhere('id', 'ILIKE', "%{$search}%");
-                });
-            })
+            // "juan perez" encuentra a Juan (nombre) Pérez (apellido): cada palabra en cualquier columna
+            ->whereSearch($search, [
+                'name', 'father_last_name', 'mother_last_name', 'rni', 'ci', 'email', 'id',
+                'branch.name', 'university.name',
+            ])
             ->when($branchId !== '' && $branchId !== null, fn($q) => $q->where('branch_id', $branchId))
             ->when($universityId !== '' && $universityId !== null, fn($q) => $q->where('university_id', $universityId))
             ->when($departmental !== '' && $departmental !== null, fn($q) => $q->where('sib_departmental', $departmental))
             ->when($status !== '' && $status !== null, fn($q) => $q->where('status', $status))
-            ->orderBy('father_last_name', 'asc')
-            ->orderBy('mother_last_name', 'asc')
-            ->orderBy('name', 'asc')
+            ->sortable([
+                'id'           => 'id',
+                // Ingeniero: apellidos y luego nombre
+                'engineer'     => ['father_last_name', 'mother_last_name', 'name'],
+                'rni'          => fn ($q, $dir) => $q->orderByRaw('LENGTH(rni) ' . $dir)->orderBy('rni', $dir),
+                'ci'           => 'ci',
+                'branch'       => fn ($q, $dir) => $q->orderBy(
+                    Branch::select('name')->whereColumn('branches.id', 'engineers.branch_id'),
+                    $dir
+                ),
+                'departmental' => 'sib_departmental',
+                'status'       => 'status',
+            ], 'engineer')
             ->paginate(15)
             ->withQueryString();
 

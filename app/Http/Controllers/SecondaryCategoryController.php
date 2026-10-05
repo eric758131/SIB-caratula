@@ -19,20 +19,22 @@ class SecondaryCategoryController extends Controller
 
         $secondaryCategories = SecondaryCategory::query()
             ->with('primaryCategory')
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'ILIKE', "%{$search}%")
-                      ->orWhere('description', 'ILIKE', "%{$search}%")
-                      ->orWhere('id', 'ILIKE', "%{$search}%");
-                });
-            })
+            ->whereSearch($search, ['name', 'description', 'id', 'primaryCategory.name'])
             ->when($primaryId !== '' && $primaryId !== null, function ($query) use ($primaryId) {
                 $query->where('primary_category_id', $primaryId);
             })
             ->when($status !== '' && $status !== null, function ($query) use ($status) {
                 $query->where('status', filter_var($status, FILTER_VALIDATE_BOOLEAN));
             })
-            ->orderBy('name', 'asc')
+            ->sortable([
+                'id'      => 'id',
+                'name'    => 'name',
+                'primary' => fn ($q, $dir) => $q->orderBy(
+                    PrimaryCategory::select('name')->whereColumn('primary_categories.id', 'secondary_categories.primary_category_id'),
+                    $dir
+                ),
+                'status'  => 'status',
+            ], 'name')
             ->paginate(10)
             ->withQueryString();
 
@@ -78,6 +80,7 @@ class SecondaryCategoryController extends Controller
             'image_1' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'image_2' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'image_3' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'definition' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:10240'],
             'status' => ['nullable', 'boolean'],
         ], $this->validationMessages(), $this->validationAttributes());
 
@@ -91,6 +94,10 @@ class SecondaryCategoryController extends Controller
             if ($request->hasFile($field)) {
                 $validated[$field] = $request->file($field)->store('secondary-categories', 'public');
             }
+        }
+
+        if ($request->hasFile('definition')) {
+            $validated['definition'] = $request->file('definition')->store('secondary-categories/definitions', 'public');
         }
 
         try {
@@ -149,6 +156,7 @@ class SecondaryCategoryController extends Controller
             'image_1' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'image_2' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'image_3' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'definition' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:10240'],
             'status' => ['nullable', 'boolean'],
         ], $this->validationMessages(), $this->validationAttributes());
 
@@ -157,6 +165,21 @@ class SecondaryCategoryController extends Controller
         $validated['example'] = $this->normalizeText($validated['example'] ?? null);
         $validated['important_notes'] = $this->normalizeText($validated['important_notes'] ?? null);
         $validated['status'] = $request->boolean('status', true);
+
+        // Documento de definición: eliminar (sin reemplazo) o reemplazar
+        if ($request->boolean('remove_definition') && !$request->hasFile('definition')) {
+            if ($secondaryCategory->definition) {
+                Storage::disk('public')->delete($secondaryCategory->definition);
+            }
+            $validated['definition'] = null;
+        }
+
+        if ($request->hasFile('definition')) {
+            if ($secondaryCategory->definition) {
+                Storage::disk('public')->delete($secondaryCategory->definition);
+            }
+            $validated['definition'] = $request->file('definition')->store('secondary-categories/definitions', 'public');
+        }
 
         $imageFields = ['image_1', 'image_2', 'image_3'];
 
@@ -248,6 +271,9 @@ class SecondaryCategoryController extends Controller
             'image_3.image' => 'La imagen 3 debe ser un archivo de imagen.',
             'image_3.mimes' => 'La imagen 3 debe ser jpg, jpeg, png o webp.',
             'image_3.max' => 'La imagen 3 no puede superar los 4 MB.',
+            'definition.file' => 'El documento de definición no es válido.',
+            'definition.mimes' => 'El documento de definición debe ser PDF, JPG, JPEG, PNG o WEBP.',
+            'definition.max' => 'El documento de definición no puede superar los 10 MB.',
         ];
     }
 
@@ -262,6 +288,7 @@ class SecondaryCategoryController extends Controller
             'image_1' => 'imagen 1',
             'image_2' => 'imagen 2',
             'image_3' => 'imagen 3',
+            'definition' => 'documento de definición',
         ];
     }
 }

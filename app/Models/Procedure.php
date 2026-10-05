@@ -138,6 +138,7 @@ class Procedure extends Model
         return $this->hasMany(ProcedureDetail::class);
     }
 
+    /** Archivos que subió el usuario (cada uno es un Document con su archivo en Media Library) */
     public function documents(): HasMany
     {
         return $this->hasMany(ProcedureDocument::class);
@@ -161,5 +162,13 @@ class Procedure extends Model
     public function topic(): BelongsTo
     {
         return $this->belongsTo(Topic::class);
+    }
+
+    /**
+     * Mientras está pendiente es un borrador del asistente: se puede editar y subir documentos.
+     */
+    public function isDraft(): bool
+    {
+        return $this->status === self::STATUS_PENDIENTE;
     }
 }

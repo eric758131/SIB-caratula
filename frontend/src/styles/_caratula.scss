@@ -1,0 +1,349 @@
+/* ============================================================
+ |  Carátula (hoja carta). Siempre papel blanco, sin importar el tema.
+ |  Todo se mide en cqi (ancho del contenedor) para que escale igual
+ |  en el panel de ayuda, en la vista previa y al imprimir.
+ * ============================================================ */
+app-caratula {
+  display: block;
+  container-type: inline-size;
+}
+
+.caratula {
+  --ink: #111827;
+  --ink-soft: #4b5563;
+  --frame: #4b5f86;
+  --placeholder: #9ca3af;
+
+  position: relative;
+  aspect-ratio: 8.5 / 11;
+  width: 100%;
+  background: #ffffff;
+  color: var(--ink);
+  font-family: Arial, 'Inter', sans-serif;
+  font-size: 1.6cqi;
+  padding: 4.5cqi 5.5cqi;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  border-radius: 1cqi;
+  color-scheme: light;
+}
+
+/* ---------- Encabezado: logo cat. 1 · logo S.I.B. · código ---------- */
+.caratula__head {
+  display: grid;
+  grid-template-columns: 30% 1fr auto;
+  align-items: start;
+  gap: 2cqi;
+}
+
+.caratula__cat1 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.caratula__logo {
+  object-fit: contain;
+}
+
+.caratula__logo--cat {
+  width: 19cqi;
+  height: 19cqi;
+}
+
+.caratula__logo--company {
+  width: 32cqi;
+  height: 20cqi;
+}
+
+.caratula__company {
+  padding-top: 1cqi;
+}
+
+.caratula__logo-placeholder {
+  display: grid;
+  place-items: center;
+  border: 0.3cqi dashed var(--placeholder);
+  border-radius: 1cqi;
+  color: var(--placeholder);
+  font-size: 1.5cqi;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+  padding: 1cqi;
+
+  &.caratula__logo--cat {
+    border-radius: 50%;
+  }
+}
+
+.caratula__visado {
+  margin-top: 1.4cqi;
+  font-size: 2.1cqi;
+  font-weight: 900;
+}
+
+.caratula__cat1-name {
+  font-size: 1.8cqi;
+  text-transform: uppercase;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+/* Código de la terciaria: grande y subrayado, a la altura de "VISADO" */
+.caratula__code {
+  align-self: end;
+  margin-bottom: 1.5cqi;
+  padding-bottom: 0.4cqi;
+  border-bottom: 0.25cqi solid var(--ink-soft);
+  font-size: 3.2cqi;
+  font-weight: 900;
+  letter-spacing: 0.1cqi;
+}
+
+/* ---------- Categoría secundaria y tipo de proyecto ---------- */
+.caratula__cat2 {
+  margin: 1.5cqi 0 0;
+  text-align: center;
+  font-size: 3.1cqi;
+  font-weight: 900;
+  letter-spacing: 0.25cqi;
+  text-transform: uppercase;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.caratula__cat3 {
+  margin: 0.3cqi 0 0;
+  text-align: center;
+  font-size: 2.1cqi;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Marco con recuadros conectados ---------- */
+/*
+ * Grilla de 2 columnas: la línea vertical del medio la dibujan (a la izquierda)
+ * los recuadros de la derecha, así es una sola línea continua en ambas filas.
+ */
+.caratula__frame {
+  --line: 0.2cqi dashed var(--frame);
+
+  flex: 1;
+  display: grid;
+  grid-template-columns: 34% 1fr;
+  grid-template-rows: auto 1fr;
+  margin-top: 1.2cqi;
+  min-height: 0;
+}
+
+.caratula__cell {
+  min-width: 0;
+}
+
+/* Arriba a la derecha: título y parámetros (sin línea abajo: la pone el recuadro de abajo).
+   Un poco más de alto que lo justo, para que respiren hasta 10 parámetros. */
+.caratula__data {
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 27cqi;
+  border-top: var(--line);
+  border-left: var(--line);
+  border-right: var(--line);
+  padding: 2.4cqi 2cqi 1.2cqi;
+}
+
+/* Abajo a la izquierda: interesados, firma y datos del ingeniero, uno sobre otro */
+.caratula__left {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  border-top: var(--line);
+  border-left: var(--line);
+  border-bottom: var(--line);
+
+  > * {
+    padding: 1.6cqi 1.4cqi;
+  }
+
+  > * + * {
+    border-top: var(--line);
+  }
+}
+
+/* Interesados: los nombres van arriba y el resto de la casilla queda en blanco para sellos */
+.caratula__owners {
+  flex: 1.5;
+  display: flex;
+  flex-direction: column;
+
+  .caratula__label {
+    margin-bottom: 1cqi;
+  }
+
+  .caratula__value {
+    margin-bottom: 0.4cqi;
+  }
+}
+
+/* Crece para ocupar el espacio libre: los nombres quedan arriba con lo que necesiten */
+.caratula__stamps {
+  flex: 1;
+  min-height: 7cqi;
+}
+
+.caratula__owners-names {
+  min-width: 0;
+}
+
+/* Espacio en blanco para el sello y la firma (se hace a mano) */
+.caratula__sign {
+  flex: 1.2;
+  /* Espacio mínimo para el sello y la firma del ingeniero */
+  min-height: 12cqi;
+  padding-top: 3cqi !important;
+}
+
+.caratula__engineer {
+  padding-top: 2.4cqi !important;
+
+  .caratula__line {
+    margin-bottom: 0.2cqi;
+  }
+}
+
+/* Abajo a la derecha: el sello de conformidad es físico, solo se deja el espacio */
+.caratula__conformity {
+  grid-column: 2;
+  grid-row: 2;
+  border: var(--line);
+  padding: 1.6cqi 2cqi;
+  min-height: 30cqi;
+}
+
+/* ---------- Textos ---------- */
+.caratula__label {
+  font-size: 1.55cqi;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+/* Las unidades conservan sus minúsculas: kW, m², mm */
+.caratula__unit {
+  text-transform: none;
+}
+
+.caratula__value {
+  font-size: 1.45cqi;
+  overflow-wrap: anywhere;
+}
+
+/* "ETIQUETA: valor" en una línea, como en el formulario impreso */
+.caratula__line {
+  margin-bottom: 1.5cqi;
+  line-height: 1.3;
+
+  .caratula__label {
+    margin-right: 0.5cqi;
+  }
+}
+
+.caratula__data .caratula__value {
+  text-transform: uppercase;
+}
+
+/* Parámetros: letra un punto más chica y sin interlineado (el título queda igual) */
+.caratula__params {
+  margin-bottom: 1.2cqi;
+
+  .caratula__line {
+    margin-bottom: 0.1cqi;
+    line-height: 1.15;
+  }
+
+  .caratula__label {
+    font-size: 1.4cqi;
+  }
+
+  .caratula__value {
+    font-size: 1.3cqi;
+  }
+}
+
+/* Más de 10 parámetros: dos columnas para que la carátula entre en una hoja */
+.caratula__params.is-compact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 2cqi;
+}
+
+.is-placeholder {
+  color: var(--placeholder) !important;
+  font-style: italic;
+  font-weight: 600 !important;
+  border-color: var(--placeholder) !important;
+}
+
+/* ============================================================
+ |  Impresión: solo la carátula, a hoja carta completa
+ * ============================================================ */
+/* Sin márgenes de página: así el navegador no tiene dónde poner fecha, título, URL ni N° de página */
+@page {
+  size: letter;
+  margin: 0;
+}
+
+.print-root {
+  display: none;
+}
+
+@media print {
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html,
+  body {
+    height: auto !important;
+    background: #fff !important;
+  }
+
+  .app-shell,
+  .app-main {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  app-header,
+  .sib-layout,
+  .help-fab,
+  .help-backdrop {
+    display: none !important;
+  }
+
+  .print-root {
+    display: block;
+    width: 8.5in;
+  }
+
+  /* Las guías grises solo sirven en pantalla: en papel quedan en blanco */
+  .print-root .is-placeholder,
+  .print-root .caratula__logo-placeholder {
+    visibility: hidden;
+  }
+
+  .print-root .caratula {
+    box-shadow: none;
+    border-radius: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -8,15 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('tariffs_parameters', function (Blueprint $table) {
+        Schema::create('tertiary_categories_parameters', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tertiary_category_id')->constrained('tertiary_categories')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('parameter_id')->constrained('parameters')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->decimal('tariff_index', 10, 6)->default(0); // o decimal dependiendo del tipo
+            $table->decimal('tariff_index', 16, 6)->nullable();
+
+            $table->boolean('is_required')->default(false);
+            $table->boolean('status')->default(true);
+
             $table->timestamps();
-            
-            // Opcional: evitar duplicados
-            $table->unique(['tertiary_category_id', 'parameter_id']);
+
+            $table->unique([
+                'tertiary_category_id',
+                'parameter_id',
+            ]);
         });
     }
 

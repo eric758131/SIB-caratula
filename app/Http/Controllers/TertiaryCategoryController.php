@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SecondaryCategory;
 use App\Models\TertiaryCategory;
+use App\Models\Parameter;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -19,21 +20,27 @@ class TertiaryCategoryController extends Controller
 
         $tertiaryCategories = TertiaryCategory::query()
             ->with('secondaryCategory.primaryCategory')
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'ILIKE', "%{$search}%")
-                      ->orWhere('code', 'ILIKE', "%{$search}%")
-                      ->orWhere('description', 'ILIKE', "%{$search}%")
-                      ->orWhere('id', 'ILIKE', "%{$search}%");
-                });
-            })
+            ->whereSearch($search, [
+                'name', 'code', 'description', 'id',
+                'secondaryCategory.name', 'secondaryCategory.primaryCategory.name',
+            ])
             ->when($secondaryId !== '' && $secondaryId !== null, function ($query) use ($secondaryId) {
                 $query->where('secondary_category_id', $secondaryId);
             })
             ->when($status !== '' && $status !== null, function ($query) use ($status) {
                 $query->where('status', filter_var($status, FILTER_VALIDATE_BOOLEAN));
             })
-            ->orderBy('name', 'asc')
+            ->sortable([
+                'id'        => 'id',
+                'code'      => 'code',
+                'name'      => 'name',
+                // Jerarquía: por la secundaria
+                'hierarchy' => fn ($q, $dir) => $q->orderBy(
+                    SecondaryCategory::select('name')->whereColumn('secondary_categories.id', 'tertiary_categories.secondary_category_id'),
+                    $dir
+                ),
+                'status'    => 'status',
+            ], 'name')
             ->paginate(10)
             ->withQueryString();
 
@@ -55,7 +62,11 @@ class TertiaryCategoryController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('tertiary-categories.create', compact('secondaryCategories'));
+        $parameters = Parameter::where('status', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('tertiary-categories.create', compact('secondaryCategories', 'parameters'));
     }
 
     public function store(Request $request)
@@ -71,7 +82,6 @@ class TertiaryCategoryController extends Controller
                 'string',
                 'min:1',
                 'max:20',
-                'regex:/^[A-Z0-9\-\.\/]+$/',
                 Rule::unique('tertiary_categories', 'code'),
             ],
             'name' => [
@@ -91,6 +101,10 @@ class TertiaryCategoryController extends Controller
             'image_2' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'image_3' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'status' => ['nullable', 'boolean'],
+            'parameters' => ['nullable', 'array'],
+            'parameters.*' => ['integer', Rule::exists('parameters', 'id')->where('status', true)],
+            'required_parameters' => ['nullable', 'array'],
+            'required_parameters.*' => ['integer'],
         ], $this->validationMessages(), $this->validationAttributes());
 
         $validated['code'] = $this->normalizeCode($validated['code']);
@@ -107,7 +121,7 @@ class TertiaryCategoryController extends Controller
         }
 
         try {
-            TertiaryCategory::create($validated);
+            $tertiaryCategory = TertiaryCategory::create($validated);
         } catch (QueryException $e) {
             if ($e->getCode() === '23505') {
                 return back()->withInput()
@@ -115,6 +129,8 @@ class TertiaryCategoryController extends Controller
             }
             throw $e;
         }
+
+        $this->syncParameters($tertiaryCategory, $request);
 
         return redirect()
             ->route('tertiary-categories.index')
@@ -126,12 +142,38 @@ class TertiaryCategoryController extends Controller
         $secondaryCategories = SecondaryCategory::with('primaryCategory')
             ->where(function ($q) use ($tertiaryCategory) {
                 $q->where('status', true)
-                  ->orWhere('id', $tertiaryCategory->secondary_category_id);
+                ->orWhere('id', $tertiaryCategory->secondary_category_id);
             })
             ->orderBy('name')
             ->get();
 
-        return view('tertiary-categories.edit', compact('tertiaryCategory', 'secondaryCategories'));
+        $tertiaryCategory->load('parameters');
+
+        $assignedParameters = $tertiaryCategory->parameters
+            ->pluck('id', 'id')
+            ->toArray();
+
+        $requiredParameters = $tertiaryCategory->parameters
+            ->filter(fn ($p) => $p->pivot->is_required)
+            ->pluck('id')
+            ->toArray();
+
+        $parameters = Parameter::where(function ($q) use ($assignedParameters) {
+                $q->where('status', true);
+                if (!empty($assignedParameters)) {
+                    $q->orWhereIn('id', array_keys($assignedParameters));
+                }
+            })
+            ->orderBy('name')
+            ->get();
+
+        return view('tertiary-categories.edit', compact(
+            'tertiaryCategory',
+            'secondaryCategories',
+            'parameters',
+            'assignedParameters',
+            'requiredParameters'
+        ));
     }
 
     public function update(Request $request, TertiaryCategory $tertiaryCategory)
@@ -150,7 +192,6 @@ class TertiaryCategoryController extends Controller
                 'string',
                 'min:1',
                 'max:20',
-                'regex:/^[A-Z0-9\-\.\/]+$/',
                 Rule::unique('tertiary_categories', 'code')->ignore($tertiaryCategory->id),
             ],
             'name' => [
@@ -172,6 +213,10 @@ class TertiaryCategoryController extends Controller
             'image_2' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'image_3' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'status' => ['nullable', 'boolean'],
+            'parameters' => ['nullable', 'array'],
+            'parameters.*' => ['integer', Rule::exists('parameters', 'id')->where('status', true)],
+            'required_parameters' => ['nullable', 'array'],
+            'required_parameters.*' => ['integer'],
         ], $this->validationMessages(), $this->validationAttributes());
 
         $validated['code'] = $this->normalizeCode($validated['code']);
@@ -183,7 +228,6 @@ class TertiaryCategoryController extends Controller
 
         $imageFields = ['image_1', 'image_2', 'image_3'];
 
-        // Eliminar imágenes marcadas (y sin reemplazo)
         foreach ($imageFields as $field) {
             if ($request->boolean("remove_{$field}") && !$request->hasFile($field)) {
                 if ($tertiaryCategory->$field) {
@@ -193,7 +237,6 @@ class TertiaryCategoryController extends Controller
             }
         }
 
-        // Subir nuevas imágenes (reemplazan las anteriores)
         foreach ($imageFields as $field) {
             if ($request->hasFile($field)) {
                 if ($tertiaryCategory->$field) {
@@ -212,6 +255,8 @@ class TertiaryCategoryController extends Controller
             }
             throw $e;
         }
+
+        $this->syncParameters($tertiaryCategory, $request);
 
         return redirect()
             ->route('tertiary-categories.index')
@@ -233,7 +278,7 @@ class TertiaryCategoryController extends Controller
 
     private function normalizeCode(string $code): string
     {
-        return strtoupper(trim($code));
+        return trim($code);
     }
 
     private function normalizeName(string $name): string
@@ -262,7 +307,6 @@ class TertiaryCategoryController extends Controller
             'code.required' => 'El código es obligatorio.',
             'code.min' => 'El código debe tener al menos :min caracteres.',
             'code.max' => 'El código no puede superar los :max caracteres.',
-            'code.regex' => 'El código solo puede contener letras mayúsculas, números, guiones, puntos y barras.',
             'code.unique' => 'Ya existe una categoría terciaria con ese código.',
             'name.required' => 'El nombre es obligatorio.',
             'name.min' => 'El nombre debe tener al menos :min caracteres.',
@@ -281,6 +325,8 @@ class TertiaryCategoryController extends Controller
             'image_3.image' => 'La imagen 3 debe ser un archivo de imagen.',
             'image_3.mimes' => 'La imagen 3 debe ser jpg, jpeg, png o webp.',
             'image_3.max' => 'La imagen 3 no puede superar los 4 MB.',
+            'parameters.array' => 'Los parámetros deben ser un arreglo.',
+            'parameters.*.exists' => 'Uno de los parámetros seleccionados no es válido o está inactivo.',
         ];
     }
 
@@ -296,6 +342,26 @@ class TertiaryCategoryController extends Controller
             'image_1' => 'imagen 1',
             'image_2' => 'imagen 2',
             'image_3' => 'imagen 3',
+            'parameters' => 'parámetros',
         ];
+    }
+
+    private function syncParameters(TertiaryCategory $tertiaryCategory, Request $request): void
+    {
+        $selectedParameters = $request->input('parameters', []);
+        $requiredParameters = array_map('intval', $request->input('required_parameters', []));
+
+        $syncData = [];
+
+        // El índice tarifario ya no se edita desde el formulario: no se toca
+        // el valor existente del pivote (los nuevos quedan en null = no cotiza).
+        foreach ($selectedParameters as $parameterId) {
+            $syncData[$parameterId] = [
+                'is_required' => in_array((int) $parameterId, $requiredParameters, true),
+                'status'      => true,
+            ];
+        }
+
+        $tertiaryCategory->parameters()->sync($syncData);
     }
 }

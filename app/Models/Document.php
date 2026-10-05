@@ -62,12 +62,6 @@ class Document extends Model implements HasMedia
         return $this->hasMany(ProcedureDocument::class);
     }
 
-    public function tertiaryCategories(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
-    {
-        return $this->belongsToMany(TertiaryCategory::class, 'tertiary_categories_documents')
-                    ->withTimestamps();
-    }
-
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('file')->singleFile();

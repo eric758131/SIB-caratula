@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Parameter extends Model
 {
@@ -14,34 +12,69 @@ class Parameter extends Model
     protected $fillable = [
         'name',
         'description',
-        'image_1',
-        'example',
-        'image_2',
-        'important_notes',
-        'image_3',
         'unit_of_measure',
         'parameter_type',
+        'data_type',
+        'max_decimals',
         'status',
     ];
 
     protected $casts = [
-        'status' => 'boolean',
+        'status'       => 'boolean',
+        'max_decimals' => 'integer',
     ];
 
-    public function tertiaryCategories(): BelongsToMany
+    /* ============================================================
+     |  ENUM: parameter_type (clasificación funcional)
+     * ============================================================ */
+    public const TYPE_PARAMETRICO = 'parametrico';
+    public const TYPE_CARATULA    = 'caratula';
+    public const TYPE_JUDICIAL    = 'judicial';
+    public const TYPE_DIRECCIONAL = 'direccional';
+
+    public const TYPES = [
+        self::TYPE_PARAMETRICO,
+        self::TYPE_CARATULA,
+        self::TYPE_JUDICIAL,
+        self::TYPE_DIRECCIONAL,
+    ];
+
+    public const TYPE_LABELS = [
+        self::TYPE_PARAMETRICO => 'Paramétrico',
+        self::TYPE_CARATULA    => 'Carátula',
+        self::TYPE_JUDICIAL    => 'Judicial',
+        self::TYPE_DIRECCIONAL => 'Direccional',
+    ];
+
+    /* ============================================================
+     |  ENUM: data_type (tipo de dato que se ingresa)
+     * ============================================================ */
+    public const DATA_NUMERO   = 'numero';
+    public const DATA_TEXTO    = 'texto';
+    public const DATA_FECHA    = 'fecha';
+    public const DATA_BOOLEANO = 'booleano';
+
+    public const DATA_TYPES = [
+        self::DATA_NUMERO,
+        self::DATA_TEXTO,
+        self::DATA_FECHA,
+        self::DATA_BOOLEANO,
+    ];
+
+    public const DATA_TYPE_LABELS = [
+        self::DATA_NUMERO   => 'Número',
+        self::DATA_TEXTO    => 'Texto',
+        self::DATA_FECHA    => 'Fecha',
+        self::DATA_BOOLEANO => 'Sí / No',
+    ];
+
+    public function getParameterTypeLabelAttribute(): string
     {
-        return $this->belongsToMany(TertiaryCategory::class, 'tariffs_parameters')
-                    ->withPivot('tariff_index')
-                    ->withTimestamps();
+        return self::TYPE_LABELS[$this->parameter_type] ?? $this->parameter_type;
     }
 
-    public function caratulas(): HasMany
+    public function getDataTypeLabelAttribute(): string
     {
-        return $this->hasMany(Caratula::class);
-    }
-
-    public function tariffParameters(): HasMany
-    {
-        return $this->hasMany(TariffParameter::class);
+        return self::DATA_TYPE_LABELS[$this->data_type] ?? $this->data_type;
     }
 }

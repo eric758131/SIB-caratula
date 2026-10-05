@@ -1,0 +1,51 @@
+@if (store.procedure(); as p) {
+  <section class="card fade-in">
+    <div class="success-hero">
+      <div class="success-hero__icon" aria-hidden="true">🎉</div>
+      <h2>¡Trámite enviado!</h2>
+      <p class="step-lead" style="margin-bottom: 0">Tu trámite fue registrado el {{ p.entry_date }}.</p>
+      <div class="alert alert--info" role="status" style="margin-top: 16px; text-align: left">
+        <span class="alert__icon" aria-hidden="true">🏢</span>
+        <span class="alert__body">
+          Debe apersonarse a las oficinas de la <strong>SIB La Paz</strong> para concluir el proceso de registro de su
+          visado. Por favor, consulte el flujograma de procedimientos.
+        </span>
+      </div>
+      <p class="field__hint" style="margin-top: 10px">
+        Estado: <span class="badge badge--ok">{{ p.status }}</span>
+      </p>
+    </div>
+
+    @if (sentFiles().length) {
+      <div class="block">
+        <div class="section-label"><span class="num">1</span> Archivos que enviaste</div>
+        <div class="download-list">
+          @for (f of sentFiles(); track f.id) {
+            <div class="download-item">
+              <span style="font-size: 1.4em" aria-hidden="true">📎</span>
+              <div>
+                <strong>{{ f.file_name }}</strong>
+                <small>{{ f.docName }} · {{ f.human_size }}</small>
+              </div>
+              <a class="btn btn--ghost btn--sm" [href]="f.download_url" target="_blank" rel="noopener">⬇</a>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="block">
+      <div class="section-label"><span class="num">{{ sentFiles().length ? 2 : 1 }}</span> Tu carátula</div>
+      <p class="section-help">Imprímela en hoja tamaño carta, luego sella y firma en el espacio en blanco.</p>
+      <div class="preview-paper" style="max-width: 420px">
+        <app-caratula [data]="store.caratula()" />
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <button type="button" class="btn btn--ghost" (click)="print()">🖨️ Imprimir carátula</button>
+      <span class="step-nav__spacer"></span>
+      <button type="button" class="btn btn--primary btn--lg" (click)="store.reset()">➕ Iniciar nuevo trámite</button>
+    </div>
+  </section>
+}

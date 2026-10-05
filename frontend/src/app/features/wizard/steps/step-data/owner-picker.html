@@ -1,0 +1,92 @@
+<form class="quick-create" style="margin-top: 0" (submit)="$event.preventDefault(); save()">
+  <div class="form-grid">
+    <div class="field">
+      <label class="field__label" for="owner-name">Nombre completo <span class="req">*</span></label>
+      <input
+        id="owner-name"
+        class="input"
+        maxlength="200"
+        autocomplete="off"
+        placeholder="Ej.: Juan Pérez Mamani"
+        [class.is-invalid]="fieldError(error(), 'name')"
+        [value]="newName()"
+        (input)="newName.set(value($event))"
+        (focus)="onFocus()"
+      />
+      @if (fieldError(error(), 'name'); as msg) {
+        <span class="field__error">{{ msg }}</span>
+      } @else {
+        <span class="field__hint">Persona o empresa, como figura en sus documentos.</span>
+      }
+    </div>
+    <div class="field">
+      <label class="field__label" for="owner-phone">Teléfono</label>
+      <input
+        id="owner-phone"
+        class="input"
+        type="tel"
+        maxlength="30"
+        placeholder="Ej.: 71234567"
+        [class.is-invalid]="fieldError(error(), 'phone')"
+        [value]="newPhone()"
+        (input)="newPhone.set(value($event))"
+        (focus)="onFocus()"
+      />
+      @if (fieldError(error(), 'phone'); as msg) {
+        <span class="field__error">{{ msg }}</span>
+      } @else {
+        <span class="field__hint">Opcional.</span>
+      }
+    </div>
+  </div>
+
+  @if (error() && !fieldError(error(), 'name') && !fieldError(error(), 'phone')) {
+    <div class="alert alert--error" style="margin-top: 12px">
+      <span class="alert__icon" aria-hidden="true">❌</span><span class="alert__body">{{ error()!.message }}</span>
+    </div>
+  }
+
+  @if (notice(); as n) {
+    <div class="alert alert--info" role="status" style="margin-top: 12px">
+      <span class="alert__icon" aria-hidden="true">ℹ️</span><span class="alert__body">{{ n }}</span>
+    </div>
+  }
+
+  <div class="quick-create__actions">
+    <button type="submit" class="btn btn--primary" [disabled]="saving() || newName().trim().length < 3">
+      @if (saving()) {
+        <span class="spinner"></span>
+      }
+      ➕ Agregar interesado
+    </button>
+  </div>
+</form>
+
+<div class="person-list">
+  @for (o of store.owners(); track o.id) {
+    <div class="person" [class.is-principal]="o.is_principal">
+      <span class="person__avatar" aria-hidden="true">{{ initials(o.name) }}</span>
+      <div class="person__info">
+        <strong>{{ o.name }}</strong>
+        <small>{{ o.phone || 'Sin teléfono' }}</small>
+      </div>
+      @if (store.owners().length > 1) {
+        <button
+          type="button"
+          class="principal-toggle"
+          [class.is-active]="o.is_principal"
+          [attr.aria-pressed]="o.is_principal"
+          title="El interesado principal aparece primero en la carátula"
+          (click)="store.setPrincipalOwner(o.id)"
+        >
+          ★ {{ o.is_principal ? 'Principal' : 'Hacer principal' }}
+        </button>
+      }
+      <button type="button" class="icon-btn" [attr.aria-label]="'Quitar a ' + o.name" title="Quitar" (click)="store.removeOwner(o.id)">
+        ✕
+      </button>
+    </div>
+  } @empty {
+    <div class="empty">Aún no agregaste interesados.</div>
+  }
+</div>

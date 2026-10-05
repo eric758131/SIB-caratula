@@ -20,11 +20,6 @@ class Owner extends Model
         'status' => 'boolean',
     ];
 
-    public function caratulas(): HasMany
-    {
-        return $this->hasMany(Caratula::class);
-    }
-
     public function procedureOwners(): HasMany
     {
         return $this->hasMany(ProcedureOwner::class);

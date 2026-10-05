@@ -18,7 +18,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminUserSeeder::class,
             CategorySeeder::class,
-            BranchSeeder::class,
+            ParameterSeeder::class,
+            RequiredDocumentSeeder::class,            BranchSeeder::class,
             SpecialtySeeder::class,
             UniversitySeeder::class,
             EngineerSeeder::class,
