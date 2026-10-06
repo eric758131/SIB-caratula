@@ -246,7 +246,7 @@ class EngineerController extends Controller
                 "regex:/^[\pL\s'\-\.]+$/u",
             ],
             'ci' => [
-                'required',
+                'nullable',
                 'string',
                 'max:20',
                 'regex:/^\d{5,15}(-[A-Z0-9]{1,3})?$/',
@@ -322,7 +322,7 @@ class EngineerController extends Controller
     private function normalizeFields(array $data): array
     {
         $data['rni'] = preg_replace('/\D/', '', $data['rni']);
-        $data['ci']  = strtoupper(trim($data['ci']));
+        $data['ci']  = !empty($data['ci']) ? strtoupper(trim($data['ci'])) : null;
 
         $data['name']              = $this->normalizeName($data['name']);
         $data['father_last_name']  = $this->normalizeName($data['father_last_name']);
@@ -377,7 +377,6 @@ class EngineerController extends Controller
 
             'mother_last_name.regex' => 'El apellido materno solo puede contener letras, espacios, apóstrofes, guiones y puntos.',
 
-            'ci.required' => 'El CI es obligatorio.',
             'ci.regex' => 'El CI debe tener entre 5 y 15 dígitos, con extensión opcional (ej: 1234567-1A).',
             'ci.unique' => 'Ya existe un ingeniero con ese CI.',
 

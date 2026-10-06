@@ -58,6 +58,14 @@ export class EngineerPicker {
   protected readonly error = signal<ApiError | null>(null);
   protected readonly fieldError = fieldError;
 
+  /** Buscador de especialidades del formulario de alta */
+  protected readonly specialtyQuery = signal('');
+  protected readonly filteredSpecialties = computed(() => {
+    const term = normalize(this.specialtyQuery().trim());
+    const all = this.options()?.specialties ?? [];
+    return term ? all.filter((s) => normalize(s.name).includes(term)) : all;
+  });
+
   /** Especialidades sugeridas para el tipo de proyecto elegido */
   protected readonly recommended = computed(() => this.store.tertiaryDetail()?.specialties.map((s) => s.name) ?? []);
 
@@ -141,6 +149,7 @@ export class EngineerPicker {
 
   protected startCreate(): void {
     this.form.set({ ...EMPTY_FORM, rni: this.query().trim() });
+    this.specialtyQuery.set('');
     this.error.set(null);
     this.creating.set(true);
     this.open.set(false);
@@ -171,7 +180,7 @@ export class EngineerPicker {
 
   protected canSave(): boolean {
     const f = this.form();
-    return !!(f.name.trim() && f.father_last_name.trim() && f.rni.trim() && f.ci.trim() && f.branch_id && f.university_id);
+    return !!(f.name.trim() && f.father_last_name.trim() && f.rni.trim() && f.branch_id && f.university_id);
   }
 
   protected save(): void {
@@ -184,7 +193,7 @@ export class EngineerPicker {
         father_last_name: f.father_last_name,
         mother_last_name: f.mother_last_name || null,
         rni: f.rni,
-        ci: f.ci.toUpperCase(),
+        ci: f.ci.trim().toUpperCase() || null,
         branch_id: Number(f.branch_id),
         university_id: Number(f.university_id),
         sib_departmental: f.sib_departmental,
@@ -221,4 +230,9 @@ export class EngineerPicker {
       this.open.set(false);
     }
   }
+}
+
+/** Minúsculas y sin tildes, para que "electrica" encuentre "Eléctrica" */
+function normalize(text: string): string {
+  return text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 }

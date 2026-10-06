@@ -128,7 +128,7 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-sm font-mono text-gray-700">{{ $engineer->rni }}</td>
-                            <td class="px-4 py-3 text-sm font-mono text-gray-700">{{ $engineer->ci }}</td>
+                            <td class="px-4 py-3 text-sm font-mono text-gray-700">{{ $engineer->ci ?? '—' }}</td>
                             <td class="px-4 py-3 text-xs text-gray-600">
                                 <div class="flex flex-col gap-0.5">
                                     <span class="font-medium text-gray-800">{{ $engineer->branch?->name ?? '—' }}</span>

@@ -24,7 +24,7 @@ class EngineerApiController extends Controller
             'name'             => ['required', 'string', 'min:2', 'max:200', $namePattern],
             'father_last_name' => ['required', 'string', 'min:2', 'max:100', $namePattern],
             'mother_last_name' => ['nullable', 'string', 'min:2', 'max:100', $namePattern],
-            'ci'               => ['required', 'string', 'max:20', 'regex:/^\d{5,15}(-[A-Z0-9]{1,3})?$/', Rule::unique('engineers', 'ci')],
+            'ci'               => ['nullable', 'string', 'max:20', 'regex:/^\d{5,15}(-[A-Z0-9]{1,3})?$/', Rule::unique('engineers', 'ci')],
             'phone'            => ['nullable', 'string', 'max:30', 'regex:/^[\d\+\-\s\(\)]+$/'],
             'email'            => ['nullable', 'string', 'email:rfc', 'max:100'],
             'sib_departmental' => ['required', Rule::in(Engineer::SIB_DEPARTAMENTALS)],
@@ -59,7 +59,7 @@ class EngineerApiController extends Controller
             'mother_last_name' => !empty($validated['mother_last_name'])
                 ? $this->normalizeName($validated['mother_last_name'])
                 : null,
-            'ci'               => strtoupper(trim($validated['ci'])),
+            'ci'               => !empty($validated['ci']) ? strtoupper(trim($validated['ci'])) : null,
             'phone'            => !empty($validated['phone']) ? trim($validated['phone']) : null,
             'email'            => !empty($validated['email']) ? mb_strtolower(trim($validated['email'])) : null,
             'sib_departmental' => $validated['sib_departmental'],

@@ -105,7 +105,7 @@
           @else { <span class="field__hint">Registro Nacional de Ingenieros.</span> }
         </div>
         <div class="field">
-          <label class="field__label" for="eng-ci">CI <span class="req">*</span></label>
+          <label class="field__label" for="eng-ci">CI</label>
           <input id="eng-ci" class="input" maxlength="20" placeholder="Ej.: 1234567 o 1234567-1A" [class.is-invalid]="fieldError(error(), 'ci')" [value]="f.ci" (input)="set('ci', $event)" />
           @if (fieldError(error(), 'ci'); as msg) { <span class="field__error">{{ msg }}</span> }
         </div>
@@ -151,9 +151,27 @@
 
       @if (o.specialties.length) {
         <div class="field" style="margin-top: 14px">
-          <span class="field__label">Especialidades</span>
-          <div class="specialty-checks">
-            @for (s of o.specialties; track s.id) {
+          <span class="field__label">
+            Especialidades
+            @if (f.specialties.length) {
+              <span class="chip">{{ f.specialties.length }} seleccionada(s)</span>
+            }
+          </span>
+          <div class="picker__search specialty-search">
+            <span class="picker__icon" aria-hidden="true">🔎</span>
+            <input
+              class="input"
+              type="search"
+              autocomplete="off"
+              placeholder="Buscar especialidad…"
+              aria-label="Buscar especialidad"
+              [value]="specialtyQuery()"
+              (input)="specialtyQuery.set($any($event.target).value)"
+              (keydown.enter)="$event.preventDefault()"
+            />
+          </div>
+          <div class="specialty-checks scroll-thin">
+            @for (s of filteredSpecialties(); track s.id) {
               <label [class.is-active]="f.specialties.includes(s.id)">
                 <input type="checkbox" [checked]="f.specialties.includes(s.id)" (change)="toggleSpecialty(s.id)" />
                 {{ s.name }}
@@ -161,6 +179,8 @@
                   <span title="Recomendada para este proyecto">★</span>
                 }
               </label>
+            } @empty {
+              <span class="field__hint">Ninguna especialidad coincide con "{{ specialtyQuery().trim() }}".</span>
             }
           </div>
         </div>

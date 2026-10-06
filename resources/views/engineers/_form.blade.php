@@ -70,11 +70,11 @@
     {{-- CI --}}
     <div>
         <label for="ci" class="block text-sm font-medium text-gray-700 mb-1">
-            CI <span class="text-red-500">*</span>
+            CI
         </label>
         <input type="text" name="ci" id="ci"
                value="{{ old('ci', $engineer->ci ?? '') }}"
-               maxlength="20" required
+               maxlength="20"
                placeholder="Ej: 1234567-1A"
                style="text-transform: uppercase;"
                class="w-full border rounded px-3 py-2 font-mono focus:outline-none focus:ring-2 focus:ring-brand-500
@@ -82,7 +82,7 @@
         @error('ci')
             <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
         @enderror
-        <p class="text-xs text-gray-500 mt-1">Entre 5 y 15 dígitos, extensión opcional (ej: 1234567-1A).</p>
+        <p class="text-xs text-gray-500 mt-1">Opcional. Entre 5 y 15 dígitos, extensión opcional (ej: 1234567-1A).</p>
     </div>
 </div>
 

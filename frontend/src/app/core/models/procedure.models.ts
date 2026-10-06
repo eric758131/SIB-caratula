@@ -92,7 +92,7 @@ export interface Engineer {
   id: number;
   full_name: string;
   rni: string;
-  ci: string;
+  ci: string | null;
   specialties: string[];
 }
 
@@ -118,7 +118,7 @@ export interface EngineerCreate {
   name: string;
   father_last_name: string;
   mother_last_name?: string | null;
-  ci: string;
+  ci?: string | null;
   phone?: string | null;
   email?: string | null;
   sib_departmental: string;
@@ -213,7 +213,7 @@ export interface Procedure {
   standards: { id: number; name: string; country: string | null }[];
   /** Ordenados: el principal primero */
   owners: (Owner & { is_principal: boolean })[];
-  projectists: { id: number; full_name: string; rni: string; ci: string; is_principal: boolean }[];
+  projectists: { id: number; full_name: string; rni: string; ci: string | null; is_principal: boolean }[];
   parameters: ProcedureParameter[];
   required_documents: ProcedureRequiredDocument[];
   /** Documentos que el usuario envía por su cuenta, además de los requeridos */
